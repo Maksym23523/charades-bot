@@ -133,11 +133,26 @@ async function drawReading(pick) {
     return;
   }
 
+  // Pre-check limit before animating to prevent wasting animation if limit reached
+  const isVip = state.userStatus.isVip;
+  const readingsToday = state.userStatus.readingsToday;
+  const limit = state.userStatus.limit;
+  if (!isVip && readingsToday >= limit) {
+    updateLimitUI();
+    return;
+  }
+
   setDrawBusy(true, pick);
   resultPanel.hidden = true;
 
   try {
-    const [reading] = await Promise.all([fetchReading(pick).catch(() => buildLocalReading(pick)), playCountAnimation(pick)]);
+    let reading;
+    if (tg && tg.initData) {
+      reading = await fetchReading(pick);
+    } else {
+      reading = buildLocalReading(pick);
+      incrementLocalReading();
+    }
     state.lastReading = reading;
     unlockCards(reading.cards || []);
     renderReading(reading, pick);
@@ -171,8 +186,11 @@ async function fetchReading(pick) {
   return response.json();
 }
 
+let countdownInterval = null;
+
 async function refreshUserStatus() {
   if (!tg || !tg.initData) {
+    loadLocalUserStatus();
     updateLimitUI();
     return;
   }
@@ -189,11 +207,15 @@ async function refreshUserStatus() {
       state.userStatus = {
         isVip: data.isVip,
         readingsToday: data.readingsToday,
-        limit: data.limit
+        limit: data.limit,
+        nextAvailableInMs: data.nextAvailableInMs
       };
+    } else {
+      loadLocalUserStatus();
     }
   } catch (error) {
     console.error("Failed to load user status:", error);
+    loadLocalUserStatus();
   }
 
   updateLimitUI();
@@ -228,9 +250,100 @@ function updateLimitUI() {
     limitOverlay.hidden = !isExhausted;
     if (isExhausted) {
       document.body.classList.add("has-modal");
+      if (state.userStatus.nextAvailableInMs > 0) {
+        startCooldownTimer(state.userStatus.nextAvailableInMs);
+      }
     } else {
       document.body.classList.remove("has-modal");
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+      const limitTimerElement = document.querySelector("#limitTimer");
+      if (limitTimerElement) {
+        limitTimerElement.textContent = "";
+      }
     }
+  }
+}
+
+function loadLocalUserStatus() {
+  try {
+    const key = `${state.profileKey}:local-status`;
+    const saved = JSON.parse(localStorage.getItem(key) || "{}");
+    
+    const timestamps = Array.isArray(saved.timestamps) ? saved.timestamps : [];
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const activeTimestamps = timestamps.filter(t => t > oneDayAgo);
+    
+    state.userStatus = {
+      isVip: Boolean(saved.isVip),
+      readingsToday: activeTimestamps.length,
+      limit: 5,
+      nextAvailableInMs: 0
+    };
+    
+    if (activeTimestamps.length >= 5) {
+      const oldest = Math.min(...activeTimestamps);
+      state.userStatus.nextAvailableInMs = Math.max(0, oldest + 24 * 60 * 60 * 1000 - Date.now());
+    }
+  } catch {
+    state.userStatus = {
+      isVip: false,
+      readingsToday: 0,
+      limit: 5,
+      nextAvailableInMs: 0
+    };
+  }
+}
+
+function incrementLocalReading() {
+  try {
+    const key = `${state.profileKey}:local-status`;
+    const saved = JSON.parse(localStorage.getItem(key) || "{}");
+    const timestamps = Array.isArray(saved.timestamps) ? saved.timestamps : [];
+    
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const activeTimestamps = timestamps.filter(t => t > oneDayAgo);
+    
+    activeTimestamps.push(Date.now());
+    
+    localStorage.setItem(key, JSON.stringify({
+      isVip: Boolean(saved.isVip),
+      timestamps: activeTimestamps
+    }));
+  } catch (e) {
+    console.error("Failed to save local reading:", e);
+  }
+}
+
+function startCooldownTimer(ms) {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+  }
+  
+  let remainingMs = ms;
+  updateTimerText(remainingMs);
+  
+  countdownInterval = setInterval(() => {
+    remainingMs -= 1000;
+    if (remainingMs <= 0) {
+      clearInterval(countdownInterval);
+      refreshUserStatus();
+    } else {
+      updateTimerText(remainingMs);
+    }
+  }, 1000);
+}
+
+function updateTimerText(ms) {
+  const hours = Math.floor(ms / (60 * 60 * 1000));
+  const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+  const seconds = Math.floor((ms % (60 * 1000)) / 1000);
+  
+  const timerStr = `${hours}ч ${minutes}м ${seconds}с`;
+  const limitTimerElement = document.querySelector("#limitTimer");
+  if (limitTimerElement) {
+    limitTimerElement.textContent = `До следующего бесплатного гадания: ${timerStr}`;
   }
 }
 

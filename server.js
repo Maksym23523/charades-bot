@@ -42,16 +42,20 @@ function getUserData(userId) {
   if (!db.users[userId]) {
     db.users[userId] = {
       vipUntil: null,
-      readingsToday: 0,
-      lastReadingDate: ""
+      readingTimestamps: []
     };
   }
   
-  const todayStr = new Date().toISOString().split("T")[0];
   const user = db.users[userId];
-  if (user.lastReadingDate !== todayStr) {
-    user.readingsToday = 0;
-    user.lastReadingDate = todayStr;
+  if (!user.readingTimestamps) {
+    user.readingTimestamps = [];
+  }
+  
+  const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  const originalLength = user.readingTimestamps.length;
+  user.readingTimestamps = user.readingTimestamps.filter(t => t > oneDayAgo);
+  
+  if (user.readingTimestamps.length !== originalLength) {
     writeDb(db);
   }
   
@@ -64,9 +68,11 @@ function updateUserData(userId, updater) {
   if (!db.users[userId]) {
     db.users[userId] = {
       vipUntil: null,
-      readingsToday: 0,
-      lastReadingDate: new Date().toISOString().split("T")[0]
+      readingTimestamps: []
     };
+  }
+  if (!db.users[userId].readingTimestamps) {
+    db.users[userId].readingTimestamps = [];
   }
   
   updater(db.users[userId]);
@@ -281,12 +287,23 @@ async function handleApi(req, res, pathname) {
     const userData = getUserData(userId);
     const isVip = isUserVip(userData);
     
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    userData.readingTimestamps = (userData.readingTimestamps || []).filter(t => t > oneDayAgo);
+    
+    const count = userData.readingTimestamps.length;
+    let nextAvailableInMs = 0;
+    if (count >= 5) {
+      const oldest = Math.min(...userData.readingTimestamps);
+      nextAvailableInMs = Math.max(0, oldest + 24 * 60 * 60 * 1000 - Date.now());
+    }
+    
     return sendJson(res, 200, {
       userId,
       isVip,
       vipUntil: userData.vipUntil,
-      readingsToday: userData.readingsToday,
-      limit: 5
+      readingsToday: count,
+      limit: 5,
+      nextAvailableInMs
     });
   }
 
@@ -331,12 +348,22 @@ async function handleApi(req, res, pathname) {
     const isVip = isUserVip(userData);
     
     if (!isVip) {
-      if (userData.readingsToday >= 5) {
-        return sendJson(res, 403, { error: "Limit reached", reason: "DAILY_LIMIT_EXHAUSTED" });
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+      userData.readingTimestamps = (userData.readingTimestamps || []).filter(t => t > oneDayAgo);
+      
+      if (userData.readingTimestamps.length >= 5) {
+        const oldest = Math.min(...userData.readingTimestamps);
+        const cooldown = Math.max(0, oldest + 24 * 60 * 60 * 1000 - Date.now());
+        return sendJson(res, 403, { 
+          error: "Limit reached", 
+          reason: "DAILY_LIMIT_EXHAUSTED",
+          nextAvailableInMs: cooldown
+        });
       }
+      
       updateUserData(userId, (u) => {
-        u.readingsToday += 1;
-        u.lastReadingDate = new Date().toISOString().split("T")[0];
+        if (!u.readingTimestamps) u.readingTimestamps = [];
+        u.readingTimestamps.push(Date.now());
       });
     }
 
