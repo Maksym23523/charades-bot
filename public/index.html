@@ -16,6 +16,8 @@
           <h1>Гадание на картах</h1>
         </div>
         <div class="top-actions">
+          <span class="vip-badge" id="vipBadge" style="display: none;">VIP</span>
+          <button class="buy-vip-header-button" id="buyVipHeaderButton" type="button" style="display: none;">⭐️ VIP</button>
           <button class="profile-button" id="profileButton" type="button">
             <span class="profile-mark" aria-hidden="true"></span>
             <span>Профиль</span>
@@ -25,6 +27,10 @@
 
       <main class="layout">
         <section class="reading-panel" aria-label="Расклад">
+          <div class="limit-status-box">
+            <span id="limitCounter">Осталось гаданий сегодня: 5/5</span>
+          </div>
+
           <div class="question-box">
             <label for="question">Вопрос</label>
             <textarea id="question" maxlength="180" placeholder="Например: что мне важно понять сегодня?"></textarea>
@@ -75,6 +81,25 @@
         </section>
       </main>
     </div>
+
+    <section class="profile-modal limit-modal" id="limitOverlay" role="dialog" aria-modal="true" aria-labelledby="limitTitle" hidden>
+      <div class="profile-card limit-card">
+        <header class="profile-head">
+          <div>
+            <p class="eyebrow">Ограничение</p>
+            <h2 id="limitTitle">Лимит исчерпан</h2>
+          </div>
+        </header>
+        <div class="limit-message-body">
+          <p>В бесплатной версии доступно 5 гаданий в день. Получите VIP-статус, чтобы гадать без ограничений!</p>
+          <div class="vip-price-box">
+            <span class="stars-icon">⭐️</span>
+            <span class="vip-price-value">99 звёзд / месяц</span>
+          </div>
+          <button class="upgrade-vip-button" id="buyVipButton" type="button">Активировать VIP за 99 ⭐️</button>
+        </div>
+      </div>
+    </section>
 
     <section class="profile-modal" id="profilePanel" role="dialog" aria-modal="true" aria-labelledby="profileTitle" hidden>
       <div class="profile-card">

@@ -13,6 +13,72 @@ const BOT_MODE = process.env.TELEGRAM_BOT_MODE || "webhook";
 const PUBLIC_DIR = path.join(__dirname, "public");
 const PHOTO_DIR = path.join(__dirname, "фото");
 
+// --- DATABASE LAYER ---
+const DB_DIR = fs.existsSync("/data") ? "/data" : __dirname;
+const DB_FILE = path.join(DB_DIR, "db.json");
+
+function readDb() {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+    }
+  } catch (e) {
+    console.error("Error reading database:", e);
+  }
+  return { users: {} };
+}
+
+function writeDb(data) {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf8");
+  } catch (e) {
+    console.error("Error writing database:", e);
+  }
+}
+
+function getUserData(userId) {
+  const db = readDb();
+  if (!db.users) db.users = {};
+  if (!db.users[userId]) {
+    db.users[userId] = {
+      vipUntil: null,
+      readingsToday: 0,
+      lastReadingDate: ""
+    };
+  }
+  
+  const todayStr = new Date().toISOString().split("T")[0];
+  const user = db.users[userId];
+  if (user.lastReadingDate !== todayStr) {
+    user.readingsToday = 0;
+    user.lastReadingDate = todayStr;
+    writeDb(db);
+  }
+  
+  return user;
+}
+
+function updateUserData(userId, updater) {
+  const db = readDb();
+  if (!db.users) db.users = {};
+  if (!db.users[userId]) {
+    db.users[userId] = {
+      vipUntil: null,
+      readingsToday: 0,
+      lastReadingDate: new Date().toISOString().split("T")[0]
+    };
+  }
+  
+  updater(db.users[userId]);
+  writeDb(db);
+}
+
+function isUserVip(user) {
+  if (!user.vipUntil) return false;
+  return new Date(user.vipUntil) > new Date();
+}
+// ----------------------
+
 const cardMeanings = [
   {
     id: 1,
@@ -204,8 +270,76 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, await setTelegramWebhook());
   }
 
+  if (req.method === "POST" && pathname === "/api/user/status") {
+    const body = await readJson(req);
+    const initDataValidation = validateTelegramInitData(body.initData || "");
+    if (!initDataValidation.valid || !initDataValidation.user) {
+      return sendJson(res, 401, { error: "Unauthorized" });
+    }
+    
+    const userId = initDataValidation.user.id;
+    const userData = getUserData(userId);
+    const isVip = isUserVip(userData);
+    
+    return sendJson(res, 200, {
+      userId,
+      isVip,
+      vipUntil: userData.vipUntil,
+      readingsToday: userData.readingsToday,
+      limit: 5
+    });
+  }
+
+  if (req.method === "POST" && pathname === "/api/telegram/create-invoice") {
+    const body = await readJson(req);
+    const initDataValidation = validateTelegramInitData(body.initData || "");
+    if (!initDataValidation.valid || !initDataValidation.user) {
+      return sendJson(res, 401, { error: "Unauthorized" });
+    }
+
+    const userId = initDataValidation.user.id;
+    
+    const result = await callTelegram("createInvoiceLink", {
+      title: "VIP Статус — 1 месяц",
+      description: "Безлимитные гадания и доступ к полной коллекции карт на 30 дней",
+      payload: `vip_subscription_30days_${userId}_${Date.now()}`,
+      provider_token: "", // Must be empty for Telegram Stars
+      currency: "XTR",
+      prices: [
+        { label: "VIP Статус", amount: 99 }
+      ]
+    });
+
+    if (result.ok) {
+      return sendJson(res, 200, { ok: true, invoiceLink: result.result });
+    } else {
+      console.error("Failed to create invoice link:", result);
+      return sendJson(res, 500, { ok: false, error: "Failed to create invoice" });
+    }
+  }
+
   if (req.method === "POST" && pathname === "/api/reading") {
     const body = await readJson(req);
+    
+    const initDataValidation = validateTelegramInitData(body.initData || "");
+    if (!initDataValidation.valid || !initDataValidation.user) {
+      return sendJson(res, 401, { error: "Unauthorized" });
+    }
+    
+    const userId = initDataValidation.user.id;
+    const userData = getUserData(userId);
+    const isVip = isUserVip(userData);
+    
+    if (!isVip) {
+      if (userData.readingsToday >= 5) {
+        return sendJson(res, 403, { error: "Limit reached", reason: "DAILY_LIMIT_EXHAUSTED" });
+      }
+      updateUserData(userId, (u) => {
+        u.readingsToday += 1;
+        u.lastReadingDate = new Date().toISOString().split("T")[0];
+      });
+    }
+
     const spread = "one";
     const pick = clampPick(body.pick);
     const question = normalizeText(body.question, 180);
@@ -277,6 +411,14 @@ async function handleTelegramUpdate(update, req) {
     return;
   }
 
+  if (update.pre_checkout_query) {
+    await callTelegram("answerPreCheckoutQuery", {
+      pre_checkout_query_id: update.pre_checkout_query.id,
+      ok: true
+    });
+    return;
+  }
+
   const message = update.message || update.edited_message;
   if (!message) {
     return;
@@ -284,6 +426,26 @@ async function handleTelegramUpdate(update, req) {
 
   const chatId = message.chat && message.chat.id;
   if (!chatId) {
+    return;
+  }
+
+  if (message.successful_payment) {
+    const payload = message.successful_payment.invoice_payload;
+    const userId = message.from && message.from.id;
+    
+    if (userId && payload && payload.startsWith("vip_subscription_30days")) {
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      
+      updateUserData(userId, (u) => {
+        u.vipUntil = thirtyDaysFromNow.toISOString();
+      });
+
+      await callTelegram("sendMessage", {
+        chat_id: chatId,
+        text: "🎉 Спасибо! Ваша оплата получена. VIP-статус на 1 месяц успешно активирован! Теперь у вас безлимитное количество гаданий. Откройте приложение снова, чтобы проверить."
+      });
+    }
     return;
   }
 
@@ -395,7 +557,7 @@ async function setTelegramWebhook() {
 
   const telegramResponse = await callTelegram("setWebhook", {
     url: status.webhookUrl,
-    allowed_updates: ["message"]
+    allowed_updates: ["message", "pre_checkout_query"]
   });
 
   const menuResponse = await callTelegram("setChatMenuButton", {
@@ -447,7 +609,19 @@ function validateTelegramInitData(initData) {
   const calculatedHash = crypto.createHmac("sha256", secret).update(dataCheckString).digest("hex");
   const valid = safeCompare(hash, calculatedHash);
 
-  return { valid };
+  let user = null;
+  if (valid) {
+    try {
+      const userStr = params.get("user");
+      if (userStr) {
+        user = JSON.parse(userStr);
+      }
+    } catch (e) {
+      console.error("Error parsing user in initData:", e);
+    }
+  }
+
+  return { valid, user };
 }
 
 function safeCompare(left, right) {

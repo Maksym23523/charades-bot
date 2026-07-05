@@ -7,7 +7,12 @@ const state = {
   profile: {
     discovered: []
   },
-  profileKey: PROFILE_STORAGE_PREFIX
+  profileKey: PROFILE_STORAGE_PREFIX,
+  userStatus: {
+    isVip: false,
+    readingsToday: 0,
+    limit: 5
+  }
 };
 
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -32,6 +37,12 @@ const countCardTemplate = document.querySelector("#countCardTemplate");
 const resultCardTemplate = document.querySelector("#resultCardTemplate");
 const profileCardTemplate = document.querySelector("#profileCardTemplate");
 
+const vipBadge = document.querySelector("#vipBadge");
+const limitCounter = document.querySelector("#limitCounter");
+const limitOverlay = document.querySelector("#limitOverlay");
+const buyVipButton = document.querySelector("#buyVipButton");
+const buyVipHeaderButton = document.querySelector("#buyVipHeaderButton");
+
 init();
 
 async function init() {
@@ -39,6 +50,7 @@ async function init() {
   loadProfile();
   bindEvents();
   await loadCards();
+  await refreshUserStatus();
 }
 
 function setupTelegram() {
@@ -96,6 +108,13 @@ function bindEvents() {
       closeProfile();
     }
   });
+
+  if (buyVipButton) {
+    buyVipButton.addEventListener("click", buyVip);
+  }
+  if (buyVipHeaderButton) {
+    buyVipHeaderButton.addEventListener("click", buyVip);
+  }
 }
 
 async function loadCards() {
@@ -122,6 +141,7 @@ async function drawReading(pick) {
     state.lastReading = reading;
     unlockCards(reading.cards || []);
     renderReading(reading, pick);
+    await refreshUserStatus();
   } catch (error) {
     console.error(error);
     resultTitle.textContent = "Не получилось";
@@ -139,7 +159,8 @@ async function fetchReading(pick) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       pick,
-      question: questionInput.value
+      question: questionInput.value,
+      initData: tg ? tg.initData : ""
     })
   });
 
@@ -148,6 +169,104 @@ async function fetchReading(pick) {
   }
 
   return response.json();
+}
+
+async function refreshUserStatus() {
+  if (!tg || !tg.initData) {
+    updateLimitUI();
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/user/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: tg.initData })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      state.userStatus = {
+        isVip: data.isVip,
+        readingsToday: data.readingsToday,
+        limit: data.limit
+      };
+    }
+  } catch (error) {
+    console.error("Failed to load user status:", error);
+  }
+
+  updateLimitUI();
+}
+
+function updateLimitUI() {
+  const isVip = state.userStatus.isVip;
+  const readingsToday = state.userStatus.readingsToday;
+  const limit = state.userStatus.limit;
+
+  if (vipBadge) {
+    vipBadge.style.display = isVip ? "inline-flex" : "none";
+  }
+
+  if (buyVipHeaderButton) {
+    buyVipHeaderButton.style.display = isVip ? "none" : "inline-flex";
+  }
+
+  if (limitCounter) {
+    if (isVip) {
+      limitCounter.textContent = "Безлимитно";
+      limitCounter.classList.add("is-vip");
+    } else {
+      const remaining = Math.max(0, limit - readingsToday);
+      limitCounter.textContent = `Осталось гаданий сегодня: ${remaining}/${limit}`;
+      limitCounter.classList.remove("is-vip");
+    }
+  }
+
+  if (limitOverlay) {
+    const isExhausted = !isVip && readingsToday >= limit;
+    limitOverlay.hidden = !isExhausted;
+    if (isExhausted) {
+      document.body.classList.add("has-modal");
+    } else {
+      document.body.classList.remove("has-modal");
+    }
+  }
+}
+
+async function buyVip() {
+  if (!tg || !tg.initData) {
+    alert("Оплата со звездами доступна только внутри Telegram.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/telegram/create-invoice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: tg.initData })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.ok && data.invoiceLink) {
+        tg.openInvoice(data.invoiceLink, async (status) => {
+          if (status === "paid") {
+            await refreshUserStatus();
+          } else {
+            console.log("Payment status:", status);
+          }
+        });
+      } else {
+        alert("Не удалось создать счет на оплату.");
+      }
+    } else {
+      alert("Ошибка при запросе счета.");
+    }
+  } catch (error) {
+    console.error("Payment request error:", error);
+    alert("Произошла ошибка при оплате.");
+  }
 }
 
 function buildLocalReading(pick) {

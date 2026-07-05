@@ -730,3 +730,130 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* --- VIP & Limit Styles --- */
+
+.vip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  color: #161419;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 8px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.buy-vip-header-button {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid #ffd700;
+  color: #ffd700;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 6px 12px;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.buy-vip-header-button:hover {
+  background: #ffd700;
+  color: #161419;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+}
+
+.limit-status-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#limitCounter.is-vip {
+  color: #ffd700;
+  font-weight: 600;
+  background: rgba(255, 215, 0, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.limit-modal {
+  z-index: 120;
+}
+
+.limit-card {
+  max-width: 360px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.05);
+}
+
+.limit-message-body {
+  padding: 20px 0;
+  text-align: center;
+}
+
+.limit-message-body p {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.vip-price-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px 24px;
+  margin-bottom: 28px;
+  gap: 8px;
+}
+
+.stars-icon {
+  font-size: 20px;
+}
+
+.vip-price-value {
+  color: #ffd700;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.upgrade-vip-button {
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  color: #161419;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 700;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.upgrade-vip-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+}
+
+.upgrade-vip-button:active {
+  transform: translateY(0);
+}
