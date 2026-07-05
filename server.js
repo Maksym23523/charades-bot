@@ -13,128 +13,162 @@ const BOT_MODE = process.env.TELEGRAM_BOT_MODE || "webhook";
 const PUBLIC_DIR = path.join(__dirname, "public");
 const PHOTO_DIR = path.join(__dirname, "фото");
 
-// --- DATABASE LAYER ---
-const DB_DIR = fs.existsSync("/data") ? "/data" : __dirname;
-const DB_FILE = path.join(DB_DIR, "db.json");
+// --- DATABASE LAYER (SUPABASE) ---
+const SUPABASE_URL = process.env.SUPABASE_URL || "";
+const SUPABASE_KEY = process.env.SUPABASE_KEY || "";
 
-function readDb() {
+async function callSupabase(path, options = {}) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.error("Supabase URL or Key is not configured!");
+    return null;
+  }
+
+  const url = `${SUPABASE_URL.replace(/\/+$/, "")}/rest/v1/${path}`;
+  const headers = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": `Bearer ${SUPABASE_KEY}`,
+    "Content-Type": "application/json",
+    ...options.headers
+  };
+
   try {
-    if (fs.existsSync(DB_FILE)) {
-      return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+    
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`Supabase API error (${response.status}): ${text}`);
+      return null;
     }
-  } catch (e) {
-    console.error("Error reading database:", e);
-  }
-  return { users: {} };
-}
+    
+    if (response.status === 204) {
+      return true;
+    }
 
-function writeDb(data) {
-  try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf8");
-  } catch (e) {
-    console.error("Error writing database:", e);
+    return await response.json();
+  } catch (err) {
+    console.error("Supabase request failed:", err);
+    return null;
   }
 }
 
-function getUserRecord(db, userId, username) {
-  if (!db.users) db.users = {};
-  
-  const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : null;
+async function getUserRecord(userId, username) {
   const strUserId = userId ? String(userId) : null;
+  const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : null;
   
-  let record = null;
-  let foundKey = null;
-  
-  // 1. First check by numeric userId key (canonical)
-  if (strUserId && db.users[strUserId]) {
-    record = db.users[strUserId];
-    foundKey = strUserId;
+  if (!strUserId && !cleanUsername) {
+    return null;
   }
-  
-  // 2. Next check by username key (e.g. if added manually by username)
-  if (!record && cleanUsername && db.users[cleanUsername]) {
-    record = db.users[cleanUsername];
-    foundKey = cleanUsername;
+
+  let query = "";
+  if (strUserId && cleanUsername) {
+    query = `or=(id.eq.${strUserId},username.ilike.${cleanUsername})`;
+  } else if (strUserId) {
+    query = `id.eq.${strUserId}`;
+  } else {
+    query = `username.ilike.${cleanUsername}`;
   }
-  
-  // 3. Search through records for matching id field
-  if (!record && strUserId) {
-    for (const key of Object.keys(db.users)) {
-      const u = db.users[key];
-      if (u.id && String(u.id) === strUserId) {
-        record = u;
-        foundKey = key;
-        break;
-      }
-    }
+
+  const records = await callSupabase(`users?${query}`);
+  if (!records || records.length === 0) {
+    return null;
   }
-  
-  // 4. Search through records for matching username field
-  if (!record && cleanUsername) {
-    for (const key of Object.keys(db.users)) {
-      const u = db.users[key];
-      if (u.username && u.username.toLowerCase().replace(/^@/, "") === cleanUsername) {
-        record = u;
-        foundKey = key;
-        break;
-      }
-    }
-  }
-  
-  // 5. If not found, create a new record
+
+  let record = records.find(r => r.id === strUserId);
   if (!record) {
-    record = {
-      vipUntil: null,
-      readingTimestamps: []
-    };
-    // Always prioritize userId as the key, fall back to username if userId is not present
-    const newKey = strUserId || cleanUsername;
-    if (newKey) {
-      db.users[newKey] = record;
-      foundKey = newKey;
-    }
+    record = records[0];
   }
-  
-  // 6. Migrate record to userId key if it was stored under username key
-  if (strUserId && foundKey === cleanUsername && strUserId !== cleanUsername) {
-    db.users[strUserId] = record;
-    delete db.users[cleanUsername];
-    foundKey = strUserId;
-  }
-  
-  // 7. Synchronize fields inside the record
-  if (strUserId) record.id = strUserId;
-  if (cleanUsername) record.username = cleanUsername;
-  
+
   return record;
 }
 
-function getUserData(userId, username) {
-  const db = readDb();
-  const user = getUserRecord(db, userId, username);
+async function getUserData(userId, username) {
+  const strUserId = userId ? String(userId) : null;
+  const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : null;
   
-  if (!user.readingTimestamps) {
-    user.readingTimestamps = [];
+  let record = await getUserRecord(strUserId, cleanUsername);
+  
+  if (record) {
+    // Migration: If record was stored under username key
+    if (strUserId && record.id !== strUserId) {
+      const oldId = record.id;
+      await callSupabase(`users?id=eq.${oldId}`, { method: "DELETE" });
+      
+      record.id = strUserId;
+      if (cleanUsername) record.username = cleanUsername;
+      
+      await callSupabase("users", {
+        method: "POST",
+        body: JSON.stringify(record)
+      });
+    } else if (cleanUsername && record.username !== cleanUsername) {
+      record.username = cleanUsername;
+      await callSupabase("users", {
+        method: "POST",
+        headers: { "Prefer": "resolution=merge-duplicates" },
+        body: JSON.stringify({
+          id: record.id,
+          username: cleanUsername
+        })
+      });
+    }
+  } else {
+    record = {
+      id: strUserId || cleanUsername,
+      username: cleanUsername,
+      vip_until: null,
+      reading_timestamps: []
+    };
+    
+    await callSupabase("users", {
+      method: "POST",
+      body: JSON.stringify(record)
+    });
   }
-  
+
+  const appUser = {
+    id: record.id,
+    username: record.username,
+    vipUntil: record.vip_until,
+    readingTimestamps: Array.isArray(record.reading_timestamps) ? record.reading_timestamps : []
+  };
+
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-  user.readingTimestamps = user.readingTimestamps.filter(t => t > oneDayAgo);
-  
-  writeDb(db);
-  
-  return user;
+  const originalLength = appUser.readingTimestamps.length;
+  appUser.readingTimestamps = appUser.readingTimestamps.filter(t => t > oneDayAgo);
+
+  if (appUser.readingTimestamps.length !== originalLength) {
+    await callSupabase("users", {
+      method: "POST",
+      headers: { "Prefer": "resolution=merge-duplicates" },
+      body: JSON.stringify({
+        id: appUser.id,
+        reading_timestamps: appUser.readingTimestamps
+      })
+    });
+  }
+
+  return appUser;
 }
 
-function updateUserData(userId, username, updater) {
-  const db = readDb();
-  const user = getUserRecord(db, userId, username);
-  
-  if (!user.readingTimestamps) {
-    user.readingTimestamps = [];
-  }
-  
-  updater(user);
-  writeDb(db);
+async function updateUserData(userId, username, updater) {
+  const appUser = await getUserData(userId, username);
+  if (!appUser) return;
+
+  updater(appUser);
+
+  await callSupabase("users", {
+    method: "POST",
+    headers: { "Prefer": "resolution=merge-duplicates" },
+    body: JSON.stringify({
+      id: appUser.id,
+      username: appUser.username,
+      vip_until: appUser.vipUntil,
+      reading_timestamps: appUser.readingTimestamps
+    })
+  });
 }
 
 function isUserVip(user) {
@@ -343,7 +377,7 @@ async function handleApi(req, res, pathname) {
     
     const userId = initDataValidation.user.id;
     const username = initDataValidation.user.username;
-    const userData = getUserData(userId, username);
+    const userData = await getUserData(userId, username);
     const isVip = isUserVip(userData);
     
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -404,7 +438,7 @@ async function handleApi(req, res, pathname) {
     
     const userId = initDataValidation.user.id;
     const username = initDataValidation.user.username;
-    const userData = getUserData(userId, username);
+    const userData = await getUserData(userId, username);
     const isVip = isUserVip(userData);
     
     if (!isVip) {
@@ -421,7 +455,7 @@ async function handleApi(req, res, pathname) {
         });
       }
       
-      updateUserData(userId, username, (u) => {
+      await updateUserData(userId, username, (u) => {
         if (!u.readingTimestamps) u.readingTimestamps = [];
         u.readingTimestamps.push(Date.now());
       });
@@ -525,7 +559,7 @@ async function handleTelegramUpdate(update, req) {
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
       
-      updateUserData(userId, username, (u) => {
+      await updateUserData(userId, username, (u) => {
         u.vipUntil = thirtyDaysFromNow.toISOString();
       });
 
