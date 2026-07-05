@@ -146,13 +146,17 @@ async function drawReading(pick) {
   resultPanel.hidden = true;
 
   try {
-    let reading;
+    let readingPromise;
     if (tg && tg.initData) {
-      reading = await fetchReading(pick);
+      readingPromise = fetchReading(pick);
     } else {
-      reading = buildLocalReading(pick);
-      incrementLocalReading();
+      readingPromise = Promise.resolve().then(() => {
+        incrementLocalReading();
+        return buildLocalReading(pick);
+      });
     }
+
+    const [reading] = await Promise.all([readingPromise, playCountAnimation(pick)]);
     state.lastReading = reading;
     unlockCards(reading.cards || []);
     renderReading(reading, pick);
