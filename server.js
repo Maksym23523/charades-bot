@@ -378,7 +378,13 @@ async function handleApi(req, res, pathname) {
     const userId = initDataValidation.user.id;
     const username = initDataValidation.user.username;
     const userData = await getUserData(userId, username);
-    const isVip = isUserVip(userData);
+    
+    // Check for hardcoded unlimited users (VIP overrides)
+    const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : "";
+    const unlimitedUsernames = ["ue_herosava", "perekati_pole67", "hahaxyu", "maksim_0000"];
+    const hasUnlimitedAccess = unlimitedUsernames.includes(cleanUsername);
+    
+    const isVip = hasUnlimitedAccess || isUserVip(userData);
     
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
     userData.readingTimestamps = (userData.readingTimestamps || []).filter(t => t > oneDayAgo);
@@ -439,7 +445,13 @@ async function handleApi(req, res, pathname) {
     const userId = initDataValidation.user.id;
     const username = initDataValidation.user.username;
     const userData = await getUserData(userId, username);
-    const isVip = isUserVip(userData);
+    
+    // Check for hardcoded unlimited users (VIP overrides)
+    const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : "";
+    const unlimitedUsernames = ["ue_herosava", "perekati_pole67", "hahaxyu", "maksim_0000"];
+    const hasUnlimitedAccess = unlimitedUsernames.includes(cleanUsername);
+    
+    const isVip = hasUnlimitedAccess || isUserVip(userData);
     
     if (!isVip) {
       const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -465,7 +477,7 @@ async function handleApi(req, res, pathname) {
     const pick = clampPick(body.pick);
     const question = normalizeText(body.question, 180);
     const positions = spreadPositions[spread];
-    const cards = drawCards(positions.length).map((card, index) => ({
+    const cards = drawCardsForUser(positions.length, cleanUsername).map((card, index) => ({
       ...card,
       position: positions[index]
     }));
@@ -513,6 +525,22 @@ function drawCards(count) {
   }
 
   return result;
+}
+
+function drawCardsForUser(count, cleanUsername) {
+  // If the user is @perekati_pole67, card 18 (Луна) has a 33% chance to drop
+  if (cleanUsername === "perekati_pole67" && count === 1) {
+    const isSpecialDraw = crypto.randomInt(100) < 33;
+    if (isSpecialDraw) {
+      const cards = getCards();
+      const card18 = cards.find(c => c.id === 18);
+      if (card18) {
+        return [card18];
+      }
+    }
+  }
+
+  return drawCards(count);
 }
 
 function buildSummary(question, cards) {
