@@ -61,9 +61,21 @@ function setupTelegram() {
   tg.ready();
   tg.expand();
 
+  const username = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username;
   const telegramUserId = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id;
+
   if (telegramUserId) {
-    state.profileKey = `${PROFILE_STORAGE_PREFIX}:${telegramUserId}`;
+    const idKey = `${PROFILE_STORAGE_PREFIX}:${telegramUserId}`;
+    const usernameKey = username ? `${PROFILE_STORAGE_PREFIX}:${username.toLowerCase()}` : null;
+
+    if (usernameKey && localStorage.getItem(usernameKey) && !localStorage.getItem(idKey)) {
+      try {
+        localStorage.setItem(idKey, localStorage.getItem(usernameKey));
+      } catch (e) {
+        console.error("Failed to migrate client-side progress from username key to ID key:", e);
+      }
+    }
+    state.profileKey = idKey;
   }
 
   const theme = tg.themeParams || {};

@@ -36,46 +36,104 @@ function writeDb(data) {
   }
 }
 
-function getUserData(userId) {
-  const db = readDb();
+function getUserRecord(db, userId, username) {
   if (!db.users) db.users = {};
-  if (!db.users[userId]) {
-    db.users[userId] = {
+  
+  const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : null;
+  const strUserId = userId ? String(userId) : null;
+  
+  let record = null;
+  let foundKey = null;
+  
+  // 1. First check by numeric userId key (canonical)
+  if (strUserId && db.users[strUserId]) {
+    record = db.users[strUserId];
+    foundKey = strUserId;
+  }
+  
+  // 2. Next check by username key (e.g. if added manually by username)
+  if (!record && cleanUsername && db.users[cleanUsername]) {
+    record = db.users[cleanUsername];
+    foundKey = cleanUsername;
+  }
+  
+  // 3. Search through records for matching id field
+  if (!record && strUserId) {
+    for (const key of Object.keys(db.users)) {
+      const u = db.users[key];
+      if (u.id && String(u.id) === strUserId) {
+        record = u;
+        foundKey = key;
+        break;
+      }
+    }
+  }
+  
+  // 4. Search through records for matching username field
+  if (!record && cleanUsername) {
+    for (const key of Object.keys(db.users)) {
+      const u = db.users[key];
+      if (u.username && u.username.toLowerCase().replace(/^@/, "") === cleanUsername) {
+        record = u;
+        foundKey = key;
+        break;
+      }
+    }
+  }
+  
+  // 5. If not found, create a new record
+  if (!record) {
+    record = {
       vipUntil: null,
       readingTimestamps: []
     };
+    // Always prioritize userId as the key, fall back to username if userId is not present
+    const newKey = strUserId || cleanUsername;
+    if (newKey) {
+      db.users[newKey] = record;
+      foundKey = newKey;
+    }
   }
   
-  const user = db.users[userId];
+  // 6. Migrate record to userId key if it was stored under username key
+  if (strUserId && foundKey === cleanUsername && strUserId !== cleanUsername) {
+    db.users[strUserId] = record;
+    delete db.users[cleanUsername];
+    foundKey = strUserId;
+  }
+  
+  // 7. Synchronize fields inside the record
+  if (strUserId) record.id = strUserId;
+  if (cleanUsername) record.username = cleanUsername;
+  
+  return record;
+}
+
+function getUserData(userId, username) {
+  const db = readDb();
+  const user = getUserRecord(db, userId, username);
+  
   if (!user.readingTimestamps) {
     user.readingTimestamps = [];
   }
   
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-  const originalLength = user.readingTimestamps.length;
   user.readingTimestamps = user.readingTimestamps.filter(t => t > oneDayAgo);
   
-  if (user.readingTimestamps.length !== originalLength) {
-    writeDb(db);
-  }
+  writeDb(db);
   
   return user;
 }
 
-function updateUserData(userId, updater) {
+function updateUserData(userId, username, updater) {
   const db = readDb();
-  if (!db.users) db.users = {};
-  if (!db.users[userId]) {
-    db.users[userId] = {
-      vipUntil: null,
-      readingTimestamps: []
-    };
-  }
-  if (!db.users[userId].readingTimestamps) {
-    db.users[userId].readingTimestamps = [];
+  const user = getUserRecord(db, userId, username);
+  
+  if (!user.readingTimestamps) {
+    user.readingTimestamps = [];
   }
   
-  updater(db.users[userId]);
+  updater(user);
   writeDb(db);
 }
 
@@ -284,7 +342,8 @@ async function handleApi(req, res, pathname) {
     }
     
     const userId = initDataValidation.user.id;
-    const userData = getUserData(userId);
+    const username = initDataValidation.user.username;
+    const userData = getUserData(userId, username);
     const isVip = isUserVip(userData);
     
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -344,7 +403,8 @@ async function handleApi(req, res, pathname) {
     }
     
     const userId = initDataValidation.user.id;
-    const userData = getUserData(userId);
+    const username = initDataValidation.user.username;
+    const userData = getUserData(userId, username);
     const isVip = isUserVip(userData);
     
     if (!isVip) {
@@ -361,7 +421,7 @@ async function handleApi(req, res, pathname) {
         });
       }
       
-      updateUserData(userId, (u) => {
+      updateUserData(userId, username, (u) => {
         if (!u.readingTimestamps) u.readingTimestamps = [];
         u.readingTimestamps.push(Date.now());
       });
@@ -459,12 +519,13 @@ async function handleTelegramUpdate(update, req) {
   if (message.successful_payment) {
     const payload = message.successful_payment.invoice_payload;
     const userId = message.from && message.from.id;
+    const username = message.from && message.from.username;
     
     if (userId && payload && payload.startsWith("vip_subscription_30days")) {
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
       
-      updateUserData(userId, (u) => {
+      updateUserData(userId, username, (u) => {
         u.vipUntil = thirtyDaysFromNow.toISOString();
       });
 

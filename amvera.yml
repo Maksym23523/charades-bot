@@ -5,3 +5,4 @@ meta:
     version: 18
 run:
   command: npm start
+  persistenceMount: /data
