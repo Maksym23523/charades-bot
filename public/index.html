@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#161419" />
+    <title>CHARADES</title>
+    <link rel="stylesheet" href="/styles.css?v=6" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CHARADES</p>
+          <h1>Гадание на картах</h1>
+        </div>
+        <div class="top-actions">
+          <button class="profile-button" id="profileButton" type="button">
+            <span class="profile-mark" aria-hidden="true"></span>
+            <span>Профиль</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="reading-panel" aria-label="Расклад">
+          <div class="question-box">
+            <label for="question">Вопрос</label>
+            <textarea id="question" maxlength="180" placeholder="Например: что мне важно понять сегодня?"></textarea>
+          </div>
+
+          <div class="pick-box" role="group" aria-label="Выберите карту от одного до пяти">
+            <p class="pick-title">Выберите карту от одного до пяти</p>
+            <div class="pick-row" id="pickRow">
+              <button class="pick-option" type="button" data-pick="1">1</button>
+              <button class="pick-option" type="button" data-pick="2">2</button>
+              <button class="pick-option" type="button" data-pick="3">3</button>
+              <button class="pick-option" type="button" data-pick="4">4</button>
+              <button class="pick-option" type="button" data-pick="5">5</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="deck-panel" aria-label="Колода">
+          <div class="deck-table">
+            <div class="idle-shuffle" aria-hidden="true">
+              <span class="idle-card idle-a"></span>
+              <span class="idle-card idle-b"></span>
+              <span class="idle-card idle-c"></span>
+              <span class="idle-card idle-d"></span>
+              <span class="idle-card idle-e"></span>
+            </div>
+            <div class="main-deck" id="deckButton" aria-label="Колода тасуется">
+              <img src="/media/карта.jpg" alt="" />
+            </div>
+          </div>
+        </section>
+
+        <section class="shuffle-layer" id="shuffleLayer" hidden aria-hidden="true">
+          <div class="count-stage">
+            <div class="count-stack" id="countStack"></div>
+            <div class="count-number" id="countNumber">1</div>
+          </div>
+        </section>
+
+        <section class="result-panel" id="resultPanel" hidden>
+          <div class="result-head">
+            <h2 class="sr-only" id="resultTitle">Одна карта</h2>
+            <button class="ghost-button" id="resetButton" type="button" aria-label="Новый расклад">↻</button>
+          </div>
+
+          <div class="result-cards" id="resultCards"></div>
+          <button class="send-button" id="sendButton" type="button" hidden>Отправить в чат</button>
+        </section>
+      </main>
+    </div>
+
+    <section class="profile-modal" id="profilePanel" role="dialog" aria-modal="true" aria-labelledby="profileTitle" hidden>
+      <div class="profile-card">
+        <header class="profile-head">
+          <div>
+            <p class="eyebrow">Профиль</p>
+            <h2 id="profileTitle">Коллекция</h2>
+          </div>
+          <button class="ghost-button" id="closeProfileButton" type="button" aria-label="Закрыть профиль">×</button>
+        </header>
+
+        <div class="collection-meter">
+          <div>
+            <span id="collectionCount">0/18</span>
+            <small>открыто</small>
+          </div>
+          <div class="meter-track" aria-hidden="true">
+            <span id="collectionProgress"></span>
+          </div>
+        </div>
+
+        <div class="profile-grid" id="profileGrid"></div>
+      </div>
+    </section>
+
+    <template id="countCardTemplate">
+      <span class="count-card">
+        <img src="/media/карта.jpg" alt="" />
+      </span>
+    </template>
+
+    <template id="resultCardTemplate">
+      <article class="reading-card">
+        <div class="card-image-wrap">
+          <img alt="" />
+        </div>
+      </article>
+    </template>
+
+    <template id="profileCardTemplate">
+      <article class="collection-card">
+        <div class="collection-image">
+          <img alt="" />
+        </div>
+      </article>
+    </template>
+
+    <script src="/app.js?v=6"></script>
+  </body>
+</html>

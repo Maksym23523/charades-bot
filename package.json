@@ -1,0 +1,14 @@
+{
+  "name": "telegram-card-reading-miniapp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Telegram bot and Mini App for card readings",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
