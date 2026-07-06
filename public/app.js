@@ -210,7 +210,8 @@ async function drawReading(pick) {
   const isVip = state.userStatus.isVip;
   const readingsToday = state.userStatus.readingsToday;
   const limit = state.userStatus.limit;
-  if (!isVip && readingsToday >= limit) {
+  const extraSpins = state.userStatus.extraSpins || 0;
+  if (!isVip && readingsToday >= limit && extraSpins <= 0) {
     updateLimitUI();
     return;
   }
