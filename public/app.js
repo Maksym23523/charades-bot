@@ -54,7 +54,6 @@ const closeOnboardingBtn = document.querySelector("#closeOnboardingBtn");
 
 const resultTextBox = document.querySelector("#resultTextBox");
 const resultCardTitle = document.querySelector("#resultCardTitle");
-const resultCardKeywords = document.querySelector("#resultCardKeywords");
 const resultCardMeaning = document.querySelector("#resultCardMeaning");
 
 init();
@@ -518,7 +517,6 @@ function renderReading(reading, pick) {
     // Populate card text details in the result panel
     if (resultTextBox) {
       if (resultCardTitle) resultCardTitle.textContent = card.title || "";
-      if (resultCardKeywords) resultCardKeywords.textContent = Array.isArray(card.keywords) ? card.keywords.join(", ") : "";
       if (resultCardMeaning) resultCardMeaning.textContent = card.meaning || "";
       resultTextBox.style.display = "block";
     }

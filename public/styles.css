@@ -1045,14 +1045,6 @@ textarea:focus {
   text-shadow: 0 2px 10px rgba(255, 215, 0, 0.2);
 }
 
-.result-card-keywords {
-  margin: 0 0 12px 0;
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
 .result-card-meaning {
   margin: 0;
   font-size: 14px;
