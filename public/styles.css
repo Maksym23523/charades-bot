@@ -526,6 +526,14 @@ textarea:focus {
   padding: 18px;
   background: rgba(12, 10, 14, 0.72);
   backdrop-filter: blur(12px);
+  opacity: 0;
+  transition: opacity 300ms ease, backdrop-filter 300ms ease;
+  pointer-events: none;
+}
+
+.profile-modal.is-active {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .profile-card {
@@ -537,6 +545,14 @@ textarea:focus {
   border-radius: 8px;
   background: rgba(33, 29, 37, 0.96);
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.44);
+  transform: scale(0.92) translateY(15px);
+  opacity: 0;
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 300ms ease;
+}
+
+.profile-modal.is-active .profile-card {
+  transform: scale(1) translateY(0);
+  opacity: 1;
 }
 
 .collection-meter {

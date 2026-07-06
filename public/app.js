@@ -273,13 +273,25 @@ function updateLimitUI() {
 
   if (limitOverlay) {
     const isExhausted = !isVip && readingsToday >= limit;
-    limitOverlay.hidden = !isExhausted;
     if (isExhausted) {
+      if (limitOverlay.hidden) {
+        limitOverlay.hidden = false;
+        limitOverlay.offsetHeight;
+        limitOverlay.classList.add("is-active");
+      }
       document.body.classList.add("has-modal");
       if (state.userStatus.nextAvailableInMs > 0) {
         startCooldownTimer(state.userStatus.nextAvailableInMs);
       }
     } else {
+      if (!limitOverlay.hidden) {
+        limitOverlay.classList.remove("is-active");
+        setTimeout(() => {
+          if (!limitOverlay.classList.contains("is-active")) {
+            limitOverlay.hidden = true;
+          }
+        }, 300);
+      }
       document.body.classList.remove("has-modal");
       if (countdownInterval) {
         clearInterval(countdownInterval);
@@ -562,14 +574,21 @@ function normalizeIds(values) {
 function openProfile() {
   renderProfile();
   profilePanel.hidden = false;
+  profilePanel.offsetHeight;
+  profilePanel.classList.add("is-active");
   document.body.classList.add("has-modal");
   closeProfileButton.focus();
 }
 
 function closeProfile() {
-  profilePanel.hidden = true;
+  profilePanel.classList.remove("is-active");
   document.body.classList.remove("has-modal");
   profileButton.focus();
+  setTimeout(() => {
+    if (!profilePanel.classList.contains("is-active")) {
+      profilePanel.hidden = true;
+    }
+  }, 300);
 }
 
 function renderProfile() {
