@@ -937,3 +937,91 @@ textarea:focus {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
 }
+
+.onboarding-card {
+  background: linear-gradient(135deg, rgba(33, 29, 37, 0.95), rgba(18, 16, 20, 0.98));
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  animation: slideDown 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.onboarding-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #ffd700, #ffa500);
+}
+
+.onboarding-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.onboarding-spark {
+  font-size: 20px;
+}
+
+.onboarding-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.onboarding-close {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.onboarding-close:hover {
+  color: var(--text);
+}
+
+.onboarding-body ol {
+  margin: 0 0 10px 0;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.onboarding-body ol li {
+  margin-bottom: 6px;
+}
+
+.onboarding-limit-info {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

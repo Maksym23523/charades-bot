@@ -49,6 +49,9 @@ const profileVipTitle = document.querySelector("#profileVipTitle");
 const profileVipExpiry = document.querySelector("#profileVipExpiry");
 const profileVipBuyBtn = document.querySelector("#profileVipBuyBtn");
 
+const onboardingCard = document.querySelector("#onboardingCard");
+const closeOnboardingBtn = document.querySelector("#closeOnboardingBtn");
+
 init();
 
 async function init() {
@@ -135,6 +138,12 @@ function bindEvents() {
   }
   if (profileVipBuyBtn) {
     profileVipBuyBtn.addEventListener("click", buyVip);
+  }
+  if (closeOnboardingBtn && onboardingCard) {
+    closeOnboardingBtn.addEventListener("click", () => {
+      onboardingCard.style.display = "none";
+      localStorage.setItem("onboarding-closed", "true");
+    });
   }
 }
 
@@ -531,6 +540,12 @@ function loadProfile() {
     if (needsSave) {
       saveProfile();
     }
+
+    // Show onboarding card if user is new and hasn't closed it
+    const onboardingClosed = localStorage.getItem("onboarding-closed") === "true";
+    if (onboardingCard && !onboardingClosed && state.profile.discovered.length === 0) {
+      onboardingCard.style.display = "block";
+    }
   } catch (gradientError) {
     state.profile.discovered = [];
     state.profile.cardCounts = {};
@@ -565,6 +580,12 @@ function unlockCards(cards) {
   state.profile.discovered = [...known].sort((a, b) => a - b);
   saveProfile();
   renderProfile();
+
+  // Auto-hide onboarding on first draw
+  if (onboardingCard && onboardingCard.style.display !== "none") {
+    onboardingCard.style.display = "none";
+    localStorage.setItem("onboarding-closed", "true");
+  }
 }
 
 function normalizeIds(values) {
