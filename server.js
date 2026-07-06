@@ -449,7 +449,7 @@ async function handleApi(req, res, pathname) {
       telegramSubscribed: userData.telegramSubscribed || false,
       invitedFriendsCount: userData.invitedFriendsCount || 0,
       botUsername: BOT_USERNAME,
-      telegramChannelUsername: process.env.TELEGRAM_CHANNEL_USERNAME || "@charades_channel"
+      telegramChannelUsername: process.env.TELEGRAM_CHANNEL_USERNAME || "@charadesgame"
     });
   }
 
@@ -562,7 +562,7 @@ async function handleApi(req, res, pathname) {
     const userId = initDataValidation.user.id;
     const username = initDataValidation.user.username;
     
-    const channel = process.env.TELEGRAM_CHANNEL_USERNAME || "@charades_channel";
+    const channel = process.env.TELEGRAM_CHANNEL_USERNAME || "@charadesgame";
     
     const chatMember = await callTelegram("getChatMember", {
       chat_id: channel,
@@ -767,7 +767,7 @@ async function handleTelegramUpdate(update, req) {
     await callTelegram("sendMessage", {
       chat_id: chatId,
       text: [
-        "🔮 Добро пожаловать в CHARADES — ваш проводник в мир таро и предсказаний!",
+        "🔮 Добро пожаловать в CHARADES — ваш проводник в мир гаданий и предсказаний!",
         "",
         "Как пользоваться ботом:",
         "1️⃣ Нажмите кнопку «Открыть CHARADES» ниже, чтобы запустить приложение.",

@@ -864,7 +864,7 @@ function shareReferralLink() {
   const userId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id;
   const botName = state.userStatus.botUsername || "charadesgame_bot";
   const refLink = `https://t.me/${botName}?start=ref_${userId || "test"}`;
-  const shareText = "🔮 Загляни в CHARADES — гадание на картах Таро! Узнай свою судьбу!";
+  const shareText = "🔮 Загляни в CHARADES — гадание на картах! Узнай свою судьбу!";
 
   if (tg && userId) {
     const fullShareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`;
