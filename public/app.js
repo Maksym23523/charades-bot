@@ -344,11 +344,8 @@ function updateLimitUI() {
       limitCounter.classList.add("is-vip");
     } else {
       const remaining = Math.max(0, limit - readingsToday);
-      let text = `Осталось гаданий сегодня: ${remaining}/${limit}`;
-      if (extraSpins > 0) {
-        text += ` (+ ${extraSpins} бонусных)`;
-      }
-      limitCounter.textContent = text;
+      const totalSpinsRemaining = remaining + extraSpins;
+      limitCounter.textContent = `Осталось гаданий сегодня: ${totalSpinsRemaining}`;
       limitCounter.classList.remove("is-vip");
     }
   }
