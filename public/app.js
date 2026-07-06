@@ -142,7 +142,7 @@ function bindEvents() {
   if (closeOnboardingBtn && onboardingCard) {
     closeOnboardingBtn.addEventListener("click", () => {
       onboardingCard.style.display = "none";
-      localStorage.setItem("onboarding-closed", "true");
+      localStorage.setItem("onboarding-closed:v3", "true");
     });
   }
 }
@@ -541,9 +541,9 @@ function loadProfile() {
       saveProfile();
     }
 
-    // Show onboarding card if user is new and hasn't closed it
-    const onboardingClosed = localStorage.getItem("onboarding-closed") === "true";
-    if (onboardingCard && !onboardingClosed && state.profile.discovered.length === 0) {
+    // Show onboarding card if user hasn't closed it
+    const onboardingClosed = localStorage.getItem("onboarding-closed:v3") === "true";
+    if (onboardingCard && !onboardingClosed) {
       onboardingCard.style.display = "block";
     }
   } catch (gradientError) {
@@ -584,7 +584,7 @@ function unlockCards(cards) {
   // Auto-hide onboarding on first draw
   if (onboardingCard && onboardingCard.style.display !== "none") {
     onboardingCard.style.display = "none";
-    localStorage.setItem("onboarding-closed", "true");
+    localStorage.setItem("onboarding-closed:v3", "true");
   }
 }
 
