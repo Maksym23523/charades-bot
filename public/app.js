@@ -49,7 +49,7 @@ const questTelegramLink = document.querySelector("#questTelegramLink");
 const questTelegramVerifyBtn = document.querySelector("#questTelegramVerifyBtn");
 const questTelegramDone = document.querySelector("#questTelegramDone");
 const refCount = document.querySelector("#refCount");
-const questReferralBtn = document.querySelector("#questReferralBtn");
+const inviteButtons = [...document.querySelectorAll(".quests-list .invite-btn")];
 
 const vipBadge = document.querySelector("#vipBadge");
 const limitCounter = document.querySelector("#limitCounter");
@@ -158,9 +158,9 @@ function bindEvents() {
   if (questTelegramVerifyBtn) {
     questTelegramVerifyBtn.addEventListener("click", verifyTelegramQuest);
   }
-  if (questReferralBtn) {
-    questReferralBtn.addEventListener("click", shareReferralLink);
-  }
+  inviteButtons.forEach((btn) => {
+    btn.addEventListener("click", shareReferralLink);
+  });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -311,6 +311,13 @@ async function refreshUserStatus() {
         if (questTelegramVerifyBtn) questTelegramVerifyBtn.style.display = "inline-flex";
         if (questTelegramDone) questTelegramDone.style.display = "none";
       }
+
+      // Update individual referral milestone quests
+      const friendsCount = state.userStatus.invitedFriendsCount || 0;
+      updateQuestStatus("questRef1", friendsCount >= 1);
+      updateQuestStatus("questRef2", friendsCount >= 2);
+      updateQuestStatus("questRef3", friendsCount >= 3);
+      updateQuestStatus("questRef5", friendsCount >= 5);
     } else {
       loadLocalUserStatus();
     }
@@ -875,5 +882,20 @@ function shareReferralLink() {
     }).catch(() => {
       alert(`Скопируйте ссылку вручную:\n${refLink}`);
     });
+  }
+}
+
+function updateQuestStatus(elementId, isCompleted) {
+  const questEl = document.getElementById(elementId);
+  if (!questEl) return;
+  const inviteBtn = questEl.querySelector(".invite-btn");
+  const doneSpan = questEl.querySelector(".quest-status-done");
+
+  if (isCompleted) {
+    if (inviteBtn) inviteBtn.style.display = "none";
+    if (doneSpan) doneSpan.style.display = "inline-block";
+  } else {
+    if (inviteBtn) inviteBtn.style.display = "inline-flex";
+    if (doneSpan) doneSpan.style.display = "none";
   }
 }
