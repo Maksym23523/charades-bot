@@ -587,16 +587,12 @@ async function handleApi(req, res, pathname) {
         return sendJson(res, 200, { ok: true, isSubscribed: false, error: "Вы не подписаны на канал." });
       }
     } else {
-      console.warn("Failed to check chat member, auto-granting reward for testing:", chatMember);
-      let rewardClaimed = false;
-      await updateUserData(userId, username, (u) => {
-        if (!u.telegramSubscribed) {
-          u.telegramSubscribed = true;
-          u.extraSpins = (u.extraSpins || 0) + 5;
-          rewardClaimed = true;
-        }
+      console.error("Failed to check chat member status:", chatMember);
+      return sendJson(res, 200, {
+        ok: false,
+        isSubscribed: false,
+        error: "Не удалось подтвердить подписку. Убедитесь, что вы подписались на канал, а бот добавлен в администраторы канала."
       });
-      return sendJson(res, 200, { ok: true, isSubscribed: true, rewardClaimed, warning: "Auto-claimed due to bot configuration limits." });
     }
   }
 
