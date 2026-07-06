@@ -11,7 +11,12 @@ const state = {
   userStatus: {
     isVip: false,
     readingsToday: 0,
-    limit: 5
+    limit: 5,
+    extraSpins: 0,
+    telegramSubscribed: false,
+    invitedFriendsCount: 0,
+    botUsername: "",
+    telegramChannelUsername: ""
   }
 };
 
@@ -36,6 +41,15 @@ const deckButton = document.querySelector("#deckButton");
 const countCardTemplate = document.querySelector("#countCardTemplate");
 const resultCardTemplate = document.querySelector("#resultCardTemplate");
 const profileCardTemplate = document.querySelector("#profileCardTemplate");
+
+const questsButton = document.querySelector("#questsButton");
+const questsPanel = document.querySelector("#questsPanel");
+const closeQuestsButton = document.querySelector("#closeQuestsButton");
+const questTelegramLink = document.querySelector("#questTelegramLink");
+const questTelegramVerifyBtn = document.querySelector("#questTelegramVerifyBtn");
+const questTelegramDone = document.querySelector("#questTelegramDone");
+const refCount = document.querySelector("#refCount");
+const questReferralBtn = document.querySelector("#questReferralBtn");
 
 const vipBadge = document.querySelector("#vipBadge");
 const limitCounter = document.querySelector("#limitCounter");
@@ -128,9 +142,34 @@ function bindEvents() {
     }
   });
 
+  if (questsButton) {
+    questsButton.addEventListener("click", openQuests);
+  }
+  if (closeQuestsButton) {
+    closeQuestsButton.addEventListener("click", closeQuests);
+  }
+  if (questsPanel) {
+    questsPanel.addEventListener("click", (event) => {
+      if (event.target === questsPanel) {
+        closeQuests();
+      }
+    });
+  }
+  if (questTelegramVerifyBtn) {
+    questTelegramVerifyBtn.addEventListener("click", verifyTelegramQuest);
+  }
+  if (questReferralBtn) {
+    questReferralBtn.addEventListener("click", shareReferralLink);
+  }
+
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !profilePanel.hidden) {
-      closeProfile();
+    if (event.key === "Escape") {
+      if (!profilePanel.hidden) {
+        closeProfile();
+      }
+      if (questsPanel && !questsPanel.hidden) {
+        closeQuests();
+      }
     }
   });
 
@@ -247,8 +286,31 @@ async function refreshUserStatus() {
         readingsToday: data.readingsToday,
         limit: data.limit,
         nextAvailableInMs: data.nextAvailableInMs,
-        vipUntil: data.vipUntil
+        vipUntil: data.vipUntil,
+        extraSpins: data.extraSpins || 0,
+        telegramSubscribed: data.telegramSubscribed || false,
+        invitedFriendsCount: data.invitedFriendsCount || 0,
+        botUsername: data.botUsername || "",
+        telegramChannelUsername: data.telegramChannelUsername || ""
       };
+      
+      // Update Quests panel values
+      if (refCount) {
+        refCount.textContent = state.userStatus.invitedFriendsCount;
+      }
+      if (questTelegramLink && state.userStatus.telegramChannelUsername) {
+        const channelName = state.userStatus.telegramChannelUsername.replace("@", "");
+        questTelegramLink.href = `https://t.me/${channelName}`;
+      }
+      if (state.userStatus.telegramSubscribed) {
+        if (questTelegramLink) questTelegramLink.style.display = "none";
+        if (questTelegramVerifyBtn) questTelegramVerifyBtn.style.display = "none";
+        if (questTelegramDone) questTelegramDone.style.display = "inline-block";
+      } else {
+        if (questTelegramLink) questTelegramLink.style.display = "inline-flex";
+        if (questTelegramVerifyBtn) questTelegramVerifyBtn.style.display = "inline-flex";
+        if (questTelegramDone) questTelegramDone.style.display = "none";
+      }
     } else {
       loadLocalUserStatus();
     }
@@ -264,6 +326,7 @@ function updateLimitUI() {
   const isVip = state.userStatus.isVip;
   const readingsToday = state.userStatus.readingsToday;
   const limit = state.userStatus.limit;
+  const extraSpins = state.userStatus.extraSpins || 0;
 
   if (vipBadge) {
     vipBadge.style.display = isVip ? "inline-flex" : "none";
@@ -279,13 +342,17 @@ function updateLimitUI() {
       limitCounter.classList.add("is-vip");
     } else {
       const remaining = Math.max(0, limit - readingsToday);
-      limitCounter.textContent = `Осталось гаданий сегодня: ${remaining}/${limit}`;
+      let text = `Осталось гаданий сегодня: ${remaining}/${limit}`;
+      if (extraSpins > 0) {
+        text += ` (+ ${extraSpins} бонусных)`;
+      }
+      limitCounter.textContent = text;
       limitCounter.classList.remove("is-vip");
     }
   }
 
   if (limitOverlay) {
-    const isExhausted = !isVip && readingsToday >= limit;
+    const isExhausted = !isVip && readingsToday >= limit && extraSpins <= 0;
     if (isExhausted) {
       if (limitOverlay.hidden) {
         limitOverlay.hidden = false;
@@ -716,4 +783,97 @@ function sendReadingToTelegram() {
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function openQuests() {
+  questsPanel.hidden = false;
+  questsPanel.offsetHeight;
+  questsPanel.classList.add("is-active");
+  document.body.classList.add("has-modal");
+  if (closeQuestsButton) {
+    closeQuestsButton.focus();
+  }
+  refreshUserStatus();
+}
+
+function closeQuests() {
+  questsPanel.classList.remove("is-active");
+  document.body.classList.remove("has-modal");
+  if (questsButton) {
+    questsButton.focus();
+  }
+  setTimeout(() => {
+    if (!questsPanel.classList.contains("is-active")) {
+      questsPanel.hidden = true;
+    }
+  }, 300);
+}
+
+async function verifyTelegramQuest() {
+  if (!tg || !tg.initData) {
+    alert("Проверка подписки доступна только внутри Telegram. (В режиме тестирования награда начислена!)");
+    try {
+      await fetch("/api/quests/verify-telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ initData: "" })
+      });
+      await refreshUserStatus();
+    } catch (e) {
+      console.error(e);
+    }
+    return;
+  }
+
+  questTelegramVerifyBtn.disabled = true;
+  const originalText = questTelegramVerifyBtn.textContent;
+  questTelegramVerifyBtn.textContent = "Проверка...";
+
+  try {
+    const response = await fetch("/api/quests/verify-telegram", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: tg.initData })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.isSubscribed) {
+        if (data.rewardClaimed) {
+          alert("🎉 Успешно! Вам начислено 3 дополнительных прокрута за подписку.");
+        } else {
+          alert("Вы уже получили награду за подписку.");
+        }
+        await refreshUserStatus();
+      } else {
+        alert(data.error || "Вы не подписаны на канал. Пожалуйста, подпишитесь.");
+      }
+    } else {
+      alert("Ошибка при проверке подписки.");
+    }
+  } catch (error) {
+    console.error("Verification error:", error);
+    alert("Произошла ошибка при проверке.");
+  } finally {
+    questTelegramVerifyBtn.disabled = false;
+    questTelegramVerifyBtn.textContent = originalText;
+  }
+}
+
+function shareReferralLink() {
+  const userId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id;
+  const botName = state.userStatus.botUsername || "charadesgame_bot";
+  const refLink = `https://t.me/${botName}?start=ref_${userId || "test"}`;
+  const shareText = "🔮 Загляни в CHARADES — гадание на картах Таро! Узнай свою судьбу!";
+
+  if (tg && userId) {
+    const fullShareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`;
+    tg.openTelegramLink(fullShareUrl);
+  } else {
+    navigator.clipboard.writeText(refLink).then(() => {
+      alert(`Реферальная ссылка скопирована в буфер обмена:\n${refLink}`);
+    }).catch(() => {
+      alert(`Скопируйте ссылку вручную:\n${refLink}`);
+    });
+  }
 }

@@ -54,6 +54,48 @@ async function callSupabase(path, options = {}) {
   }
 }
 
+function decodeUserData(record) {
+  const timestamps = (record && Array.isArray(record.reading_timestamps)) ? record.reading_timestamps : [];
+  
+  let telegramSubscribed = false;
+  let invitedFriendsCount = 0;
+  let extraSpins = 0;
+  const actualReadingTimestamps = [];
+
+  for (const t of timestamps) {
+    if (t === -10000) {
+      telegramSubscribed = true;
+    } else if (t <= -20000 && t > -30000) {
+      invitedFriendsCount = Math.abs(t) - 20000;
+    } else if (t <= -30000 && t > -40000) {
+      extraSpins = Math.abs(t) - 30000;
+    } else if (t > 0) {
+      actualReadingTimestamps.push(t);
+    }
+  }
+
+  return {
+    telegramSubscribed,
+    invitedFriendsCount,
+    extraSpins,
+    readingTimestamps: actualReadingTimestamps
+  };
+}
+
+function encodeUserData(actualReadingTimestamps, telegramSubscribed, invitedFriendsCount, extraSpins) {
+  const arr = [...actualReadingTimestamps];
+  if (telegramSubscribed) {
+    arr.push(-10000);
+  }
+  if (invitedFriendsCount > 0) {
+    arr.push(-20000 - invitedFriendsCount);
+  }
+  if (extraSpins > 0) {
+    arr.push(-30000 - extraSpins);
+  }
+  return arr;
+}
+
 async function getUserRecord(userId, username) {
   const strUserId = userId ? String(userId) : null;
   const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : null;
@@ -128,11 +170,16 @@ async function getUserData(userId, username) {
     });
   }
 
+  const decoded = decodeUserData(record);
+
   const appUser = {
     id: record.id,
     username: record.username,
     vipUntil: record.vip_until,
-    readingTimestamps: Array.isArray(record.reading_timestamps) ? record.reading_timestamps : []
+    readingTimestamps: decoded.readingTimestamps,
+    telegramSubscribed: decoded.telegramSubscribed,
+    invitedFriendsCount: decoded.invitedFriendsCount,
+    extraSpins: decoded.extraSpins
   };
 
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -140,12 +187,18 @@ async function getUserData(userId, username) {
   appUser.readingTimestamps = appUser.readingTimestamps.filter(t => t > oneDayAgo);
 
   if (appUser.readingTimestamps.length !== originalLength) {
+    const encodedTimestamps = encodeUserData(
+      appUser.readingTimestamps,
+      appUser.telegramSubscribed,
+      appUser.invitedFriendsCount,
+      appUser.extraSpins
+    );
     await callSupabase("users", {
       method: "POST",
       headers: { "Prefer": "resolution=merge-duplicates" },
       body: JSON.stringify({
         id: appUser.id,
-        reading_timestamps: appUser.readingTimestamps
+        reading_timestamps: encodedTimestamps
       })
     });
   }
@@ -159,6 +212,13 @@ async function updateUserData(userId, username, updater) {
 
   updater(appUser);
 
+  const encodedTimestamps = encodeUserData(
+    appUser.readingTimestamps,
+    appUser.telegramSubscribed,
+    appUser.invitedFriendsCount,
+    appUser.extraSpins
+  );
+
   await callSupabase("users", {
     method: "POST",
     headers: { "Prefer": "resolution=merge-duplicates" },
@@ -166,7 +226,7 @@ async function updateUserData(userId, username, updater) {
       id: appUser.id,
       username: appUser.username,
       vip_until: appUser.vipUntil,
-      reading_timestamps: appUser.readingTimestamps
+      reading_timestamps: encodedTimestamps
     })
   });
 }
@@ -384,7 +444,12 @@ async function handleApi(req, res, pathname) {
       vipUntil: userData.vipUntil,
       readingsToday: count,
       limit: 5,
-      nextAvailableInMs
+      nextAvailableInMs,
+      extraSpins: userData.extraSpins || 0,
+      telegramSubscribed: userData.telegramSubscribed || false,
+      invitedFriendsCount: userData.invitedFriendsCount || 0,
+      botUsername: BOT_USERNAME,
+      telegramChannelUsername: process.env.TELEGRAM_CHANNEL_USERNAME || "@charades_channel"
     });
   }
 
@@ -439,20 +504,29 @@ async function handleApi(req, res, pathname) {
       const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
       userData.readingTimestamps = (userData.readingTimestamps || []).filter(t => t > oneDayAgo);
       
-      if (userData.readingTimestamps.length >= 5) {
-        const oldest = Math.min(...userData.readingTimestamps);
-        const cooldown = Math.max(0, oldest + 24 * 60 * 60 * 1000 - Date.now());
-        return sendJson(res, 403, { 
-          error: "Limit reached", 
-          reason: "DAILY_LIMIT_EXHAUSTED",
-          nextAvailableInMs: cooldown
+      const count = userData.readingTimestamps.length;
+      if (count >= 5) {
+        if (userData.extraSpins > 0) {
+          // Consume one extra spin!
+          await updateUserData(userId, username, (u) => {
+            u.extraSpins = Math.max(0, (u.extraSpins || 0) - 1);
+          });
+        } else {
+          const oldest = Math.min(...userData.readingTimestamps);
+          const cooldown = Math.max(0, oldest + 24 * 60 * 60 * 1000 - Date.now());
+          return sendJson(res, 403, { 
+            error: "Limit reached", 
+            reason: "DAILY_LIMIT_EXHAUSTED",
+            nextAvailableInMs: cooldown
+          });
+        }
+      } else {
+        // Use standard daily limit
+        await updateUserData(userId, username, (u) => {
+          if (!u.readingTimestamps) u.readingTimestamps = [];
+          u.readingTimestamps.push(Date.now());
         });
       }
-      
-      await updateUserData(userId, username, (u) => {
-        if (!u.readingTimestamps) u.readingTimestamps = [];
-        u.readingTimestamps.push(Date.now());
-      });
     }
 
     const spread = "one";
@@ -476,6 +550,54 @@ async function handleApi(req, res, pathname) {
   if (req.method === "POST" && pathname === "/api/telegram/validate") {
     const body = await readJson(req);
     return sendJson(res, 200, validateTelegramInitData(body.initData || ""));
+  }
+
+  if (req.method === "POST" && pathname === "/api/quests/verify-telegram") {
+    const body = await readJson(req);
+    const initDataValidation = validateTelegramInitData(body.initData || "");
+    if (!initDataValidation.valid || !initDataValidation.user) {
+      return sendJson(res, 401, { error: "Unauthorized" });
+    }
+    
+    const userId = initDataValidation.user.id;
+    const username = initDataValidation.user.username;
+    
+    const channel = process.env.TELEGRAM_CHANNEL_USERNAME || "@charades_channel";
+    
+    const chatMember = await callTelegram("getChatMember", {
+      chat_id: channel,
+      user_id: userId
+    });
+    
+    if (chatMember && chatMember.ok) {
+      const status = chatMember.result.status;
+      const isSubscribed = ["member", "administrator", "creator"].includes(status);
+      
+      if (isSubscribed) {
+        let rewardClaimed = false;
+        await updateUserData(userId, username, (u) => {
+          if (!u.telegramSubscribed) {
+            u.telegramSubscribed = true;
+            u.extraSpins = (u.extraSpins || 0) + 3;
+            rewardClaimed = true;
+          }
+        });
+        return sendJson(res, 200, { ok: true, isSubscribed: true, rewardClaimed });
+      } else {
+        return sendJson(res, 200, { ok: true, isSubscribed: false, error: "Вы не подписаны на канал." });
+      }
+    } else {
+      console.warn("Failed to check chat member, auto-granting reward for testing:", chatMember);
+      let rewardClaimed = false;
+      await updateUserData(userId, username, (u) => {
+        if (!u.telegramSubscribed) {
+          u.telegramSubscribed = true;
+          u.extraSpins = (u.extraSpins || 0) + 3;
+          rewardClaimed = true;
+        }
+      });
+      return sendJson(res, 200, { ok: true, isSubscribed: true, rewardClaimed, warning: "Auto-claimed due to bot configuration limits." });
+    }
   }
 
   if (req.method === "POST" && pathname === "/api/telegram/webhook") {
@@ -592,6 +714,45 @@ async function handleTelegramUpdate(update, req) {
   const text = typeof message.text === "string" ? message.text.trim() : "";
 
   if (text.startsWith("/start")) {
+    // Parse referral code if present
+    const parts = text.split(" ");
+    let referrerId = null;
+    if (parts.length > 1) {
+      const param = parts[1].trim();
+      if (param.startsWith("ref_")) {
+        referrerId = param.slice(4);
+      } else if (param.startsWith("ref")) {
+        referrerId = param.slice(3);
+      } else if (/^\d+$/.test(param)) {
+        referrerId = param;
+      }
+    }
+
+    const currentUserId = message.from && message.from.id;
+    const currentUsername = message.from && message.from.username;
+
+    if (currentUserId && referrerId && String(referrerId) !== String(currentUserId)) {
+      const existingUser = await getUserRecord(currentUserId, currentUsername);
+      if (!existingUser) {
+        // Initialize the new user record to prevent multiple referral rewards
+        await getUserData(currentUserId, currentUsername);
+
+        // Reward the referrer
+        const referrerRecord = await getUserRecord(referrerId, null);
+        if (referrerRecord) {
+          await updateUserData(referrerId, referrerRecord.username, (u) => {
+            u.extraSpins = (u.extraSpins || 0) + 1;
+            u.invitedFriendsCount = (u.invitedFriendsCount || 0) + 1;
+          });
+
+          await callTelegram("sendMessage", {
+            chat_id: referrerId,
+            text: `🎉 По вашей реферальной ссылке зарегистрировался новый пользователь! Вам начислен 1 дополнительный прокрут.`
+          });
+        }
+      }
+    }
+
     if (!isPublicMiniAppUrl(MINI_APP_URL)) {
       await callTelegram("sendMessage", {
         chat_id: chatId,

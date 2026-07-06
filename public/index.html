@@ -18,6 +18,10 @@
         <div class="top-actions">
           <span class="vip-badge" id="vipBadge" style="display: none;">VIP</span>
           <button class="buy-vip-header-button" id="buyVipHeaderButton" type="button" style="display: none;">⭐️ VIP</button>
+          <button class="quests-button" id="questsButton" type="button">
+            <span class="quests-mark" aria-hidden="true">🎁</span>
+            <span>Квесты</span>
+          </button>
           <button class="profile-button" id="profileButton" type="button">
             <span class="profile-mark" aria-hidden="true"></span>
             <span>Профиль</span>
@@ -156,6 +160,51 @@
         </div>
 
         <div class="profile-grid" id="profileGrid"></div>
+      </div>
+    </section>
+
+    <section class="profile-modal" id="questsPanel" role="dialog" aria-modal="true" aria-labelledby="questsTitle" hidden>
+      <div class="profile-card">
+        <header class="profile-head">
+          <div>
+            <p class="eyebrow">Квесты</p>
+            <h2 id="questsTitle">Задания</h2>
+          </div>
+          <button class="ghost-button" id="closeQuestsButton" type="button" aria-label="Закрыть квесты">×</button>
+        </header>
+
+        <div class="quests-list" id="questsList">
+          <!-- Quest 1: Telegram Channel -->
+          <div class="quest-item" id="questTelegram">
+            <div class="quest-info">
+              <span class="quest-icon">📢</span>
+              <div class="quest-details">
+                <p class="quest-name">Подписка на канал</p>
+                <p class="quest-reward">+3 прокрута</p>
+              </div>
+            </div>
+            <div class="quest-actions">
+              <a href="#" target="_blank" class="quest-btn go-btn" id="questTelegramLink">Перейти</a>
+              <button class="quest-btn verify-btn" id="questTelegramVerifyBtn">Проверить</button>
+              <span class="quest-status-done" id="questTelegramDone" style="display: none;">Выполнено ✅</span>
+            </div>
+          </div>
+
+          <!-- Quest 2: Referral link -->
+          <div class="quest-item" id="questReferral">
+            <div class="quest-info">
+              <span class="quest-icon">👥</span>
+              <div class="quest-details">
+                <p class="quest-name">Пригласи друзей</p>
+                <p class="quest-reward">+1 прокрут за друга</p>
+              </div>
+            </div>
+            <div class="quest-actions-column">
+              <div class="ref-stats">Приглашено друзей: <span id="refCount">0</span></div>
+              <button class="quest-btn invite-btn" id="questReferralBtn">Пригласить</button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 

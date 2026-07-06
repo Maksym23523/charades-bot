@@ -1062,3 +1062,169 @@ textarea:focus {
     transform: translateY(0);
   }
 }
+
+/* Quests UI Styles */
+.quests-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid rgba(214, 169, 79, 0.35);
+  border-radius: 8px;
+  background: rgba(214, 169, 79, 0.08);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.quests-button:hover,
+.quests-button:focus-visible {
+  background: rgba(214, 169, 79, 0.16);
+  border-color: rgba(214, 169, 79, 0.6);
+}
+
+.quests-mark {
+  font-size: 14px;
+}
+
+.quests-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.quest-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  background: var(--panel-strong);
+  border: 1px solid var(--soft);
+  border-radius: 12px;
+  transition: border-color 150ms ease;
+}
+
+.quest-item:hover {
+  border-color: rgba(214, 169, 79, 0.25);
+}
+
+.quest-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.quest-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  font-size: 22px;
+}
+
+.quest-details {
+  display: grid;
+  gap: 2px;
+}
+
+.quest-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.quest-reward {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.quest-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quest-actions-column {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.ref-stats {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.ref-stats span {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.quest-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: background 150ms ease, opacity 150ms ease;
+}
+
+.go-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--soft);
+  color: var(--text);
+}
+
+.go-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.verify-btn {
+  background: var(--gold);
+  color: #121014;
+}
+
+.verify-btn:hover {
+  opacity: 0.9;
+}
+
+.verify-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.invite-btn {
+  background: linear-gradient(135deg, var(--gold), var(--rose));
+  color: #121014;
+}
+
+.invite-btn:hover {
+  opacity: 0.95;
+}
+
+.quest-status-done {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--jade);
+  padding: 6px 10px;
+  background: rgba(90, 168, 147, 0.12);
+  border: 1px solid rgba(90, 168, 147, 0.25);
+  border-radius: 8px;
+}
