@@ -13,6 +13,8 @@ const BOT_MODE = process.env.TELEGRAM_BOT_MODE || "webhook";
 const PUBLIC_DIR = path.join(__dirname, "public");
 const PHOTO_DIR = path.join(__dirname, "фото");
 
+const UNLIMITED_USERNAMES = ["ue_herosava", "perekati_pole67", "hahaxyu", "maksim_0000", "krytish_07"];
+
 // --- DATABASE LAYER (SUPABASE) ---
 const SUPABASE_URL = process.env.SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.SUPABASE_KEY || "";
@@ -423,8 +425,7 @@ async function handleApi(req, res, pathname) {
     
     // Check for hardcoded unlimited users (VIP overrides)
     const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : "";
-    const unlimitedUsernames = ["ue_herosava", "perekati_pole67", "hahaxyu", "maksim_0000"];
-    const hasUnlimitedAccess = unlimitedUsernames.includes(cleanUsername);
+    const hasUnlimitedAccess = UNLIMITED_USERNAMES.includes(cleanUsername);
     
     const isVip = hasUnlimitedAccess || isUserVip(userData);
     
@@ -495,8 +496,7 @@ async function handleApi(req, res, pathname) {
     
     // Check for hardcoded unlimited users (VIP overrides)
     const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : "";
-    const unlimitedUsernames = ["ue_herosava", "perekati_pole67", "hahaxyu", "maksim_0000"];
-    const hasUnlimitedAccess = unlimitedUsernames.includes(cleanUsername);
+    const hasUnlimitedAccess = UNLIMITED_USERNAMES.includes(cleanUsername);
     
     const isVip = hasUnlimitedAccess || isUserVip(userData);
     
