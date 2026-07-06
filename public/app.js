@@ -493,8 +493,10 @@ function loadProfile() {
     const saved = JSON.parse(localStorage.getItem(state.profileKey) || "{}");
     const discovered = Array.isArray(saved.discovered) ? saved.discovered : [];
     state.profile.discovered = normalizeIds(discovered);
+    state.profile.cardCounts = (saved.cardCounts && typeof saved.cardCounts === "object") ? saved.cardCounts : {};
   } catch {
     state.profile.discovered = [];
+    state.profile.cardCounts = {};
   }
 }
 
@@ -503,6 +505,7 @@ function saveProfile() {
     state.profileKey,
     JSON.stringify({
       discovered: state.profile.discovered,
+      cardCounts: state.profile.cardCounts,
       updatedAt: new Date().toISOString()
     })
   );
@@ -510,10 +513,15 @@ function saveProfile() {
 
 function unlockCards(cards) {
   const known = new Set(state.profile.discovered);
+  if (!state.profile.cardCounts) {
+    state.profile.cardCounts = {};
+  }
 
   cards.forEach((card) => {
     if (Number.isInteger(card.id)) {
       known.add(card.id);
+      const count = Number(state.profile.cardCounts[card.id] || 0);
+      state.profile.cardCounts[card.id] = count + 1;
     }
   });
 
@@ -545,6 +553,7 @@ function renderProfile() {
   }
 
   const discovered = new Set(state.profile.discovered);
+  const cardCounts = state.profile.cardCounts || {};
   const openedCount = state.cards.filter((card) => discovered.has(card.id)).length;
   const total = state.cards.length;
   const progress = total === 0 ? 0 : Math.round((openedCount / total) * 100);
@@ -557,10 +566,17 @@ function renderProfile() {
     const isOpen = discovered.has(card.id);
     const node = profileCardTemplate.content.firstElementChild.cloneNode(true);
     const image = node.querySelector("img");
+    const counterElement = node.querySelector(".collection-card-counter");
 
     image.src = isOpen ? card.imageUrl : "/media/карта.jpg";
     image.alt = isOpen ? card.title : "Закрытая карта";
     node.classList.toggle("is-locked", !isOpen);
+
+    if (counterElement) {
+      const count = cardCounts[card.id] || (isOpen ? 1 : 0);
+      counterElement.textContent = `${count} раз`;
+    }
+
     profileGrid.appendChild(node);
   });
 }
