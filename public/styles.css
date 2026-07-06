@@ -1025,3 +1025,48 @@ textarea:focus {
     opacity: 1;
   }
 }
+
+.result-text-box {
+  margin-top: 20px;
+  margin-bottom: 15px;
+  text-align: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(247, 239, 226, 0.06);
+  border-radius: 12px;
+  animation: fadeInText 600ms ease forwards;
+}
+
+.result-card-title {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffd700;
+  text-shadow: 0 2px 10px rgba(255, 215, 0, 0.2);
+}
+
+.result-card-keywords {
+  margin: 0 0 12px 0;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.result-card-meaning {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+@keyframes fadeInText {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

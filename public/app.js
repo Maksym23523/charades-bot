@@ -52,6 +52,11 @@ const profileVipBuyBtn = document.querySelector("#profileVipBuyBtn");
 const onboardingCard = document.querySelector("#onboardingCard");
 const closeOnboardingBtn = document.querySelector("#closeOnboardingBtn");
 
+const resultTextBox = document.querySelector("#resultTextBox");
+const resultCardTitle = document.querySelector("#resultCardTitle");
+const resultCardKeywords = document.querySelector("#resultCardKeywords");
+const resultCardMeaning = document.querySelector("#resultCardMeaning");
+
 init();
 
 async function init() {
@@ -509,6 +514,14 @@ function renderReading(reading, pick) {
     image.src = card.imageUrl;
     image.alt = card.title;
     resultCards.appendChild(node);
+
+    // Populate card text details in the result panel
+    if (resultTextBox) {
+      if (resultCardTitle) resultCardTitle.textContent = card.title || "";
+      if (resultCardKeywords) resultCardKeywords.textContent = Array.isArray(card.keywords) ? card.keywords.join(", ") : "";
+      if (resultCardMeaning) resultCardMeaning.textContent = card.meaning || "";
+      resultTextBox.style.display = "block";
+    }
   });
 
   resultPanel.hidden = false;
@@ -518,6 +531,9 @@ function renderReading(reading, pick) {
 function resetReading() {
   state.lastReading = null;
   resultPanel.hidden = true;
+  if (resultTextBox) {
+    resultTextBox.style.display = "none";
+  }
   setDrawBusy(false);
 }
 
