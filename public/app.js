@@ -494,7 +494,20 @@ function loadProfile() {
     const discovered = Array.isArray(saved.discovered) ? saved.discovered : [];
     state.profile.discovered = normalizeIds(discovered);
     state.profile.cardCounts = (saved.cardCounts && typeof saved.cardCounts === "object") ? saved.cardCounts : {};
-  } catch {
+    
+    // Ensure all already discovered cards have a count of at least 1
+    let needsSave = false;
+    state.profile.discovered.forEach((id) => {
+      if (state.profile.cardCounts[id] === undefined || state.profile.cardCounts[id] === 0) {
+        state.profile.cardCounts[id] = 1;
+        needsSave = true;
+      }
+    });
+
+    if (needsSave) {
+      saveProfile();
+    }
+  } catch (gradientError) {
     state.profile.discovered = [];
     state.profile.cardCounts = {};
   }
