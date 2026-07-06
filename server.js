@@ -578,7 +578,7 @@ async function handleApi(req, res, pathname) {
         await updateUserData(userId, username, (u) => {
           if (!u.telegramSubscribed) {
             u.telegramSubscribed = true;
-            u.extraSpins = (u.extraSpins || 0) + 3;
+            u.extraSpins = (u.extraSpins || 0) + 5;
             rewardClaimed = true;
           }
         });
@@ -592,7 +592,7 @@ async function handleApi(req, res, pathname) {
       await updateUserData(userId, username, (u) => {
         if (!u.telegramSubscribed) {
           u.telegramSubscribed = true;
-          u.extraSpins = (u.extraSpins || 0) + 3;
+          u.extraSpins = (u.extraSpins || 0) + 5;
           rewardClaimed = true;
         }
       });
@@ -737,18 +737,34 @@ async function handleTelegramUpdate(update, req) {
         // Initialize the new user record to prevent multiple referral rewards
         await getUserData(currentUserId, currentUsername);
 
-        // Reward the referrer
         const referrerRecord = await getUserRecord(referrerId, null);
         if (referrerRecord) {
+          let addedReward = 0;
           await updateUserData(referrerId, referrerRecord.username, (u) => {
-            u.extraSpins = (u.extraSpins || 0) + 1;
-            u.invitedFriendsCount = (u.invitedFriendsCount || 0) + 1;
+            const prevCount = u.invitedFriendsCount || 0;
+            const newCount = prevCount + 1;
+
+            if (newCount === 1) addedReward = 25;
+            else if (newCount === 2) addedReward = 25;
+            else if (newCount === 3) addedReward = 25;
+            else if (newCount === 5) addedReward = 25;
+            else addedReward = 0;
+
+            u.extraSpins = (u.extraSpins || 0) + addedReward;
+            u.invitedFriendsCount = newCount;
           });
 
-          await callTelegram("sendMessage", {
-            chat_id: referrerId,
-            text: `🎉 По вашей реферальной ссылке зарегистрировался новый пользователь! Вам начислен 1 дополнительный прокрут.`
-          });
+          if (addedReward > 0) {
+            await callTelegram("sendMessage", {
+              chat_id: referrerId,
+              text: `🎉 По вашей реферальной ссылке зарегистрировался новый пользователь! Вам начислено ${addedReward} дополнительных прокрутов.`
+            });
+          } else {
+            await callTelegram("sendMessage", {
+              chat_id: referrerId,
+              text: `🎉 По вашей реферальной ссылке зарегистрировался новый пользователь!`
+            });
+          }
         }
       }
     }
