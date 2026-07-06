@@ -49,7 +49,7 @@ const questTelegramLink = document.querySelector("#questTelegramLink");
 const questTelegramVerifyBtn = document.querySelector("#questTelegramVerifyBtn");
 const questTelegramDone = document.querySelector("#questTelegramDone");
 const refCount = document.querySelector("#refCount");
-const inviteButtons = [...document.querySelectorAll(".quests-list .invite-btn")];
+const questReferralBtn = document.querySelector("#questReferralBtn");
 
 const vipBadge = document.querySelector("#vipBadge");
 const limitCounter = document.querySelector("#limitCounter");
@@ -158,9 +158,9 @@ function bindEvents() {
   if (questTelegramVerifyBtn) {
     questTelegramVerifyBtn.addEventListener("click", verifyTelegramQuest);
   }
-  inviteButtons.forEach((btn) => {
-    btn.addEventListener("click", shareReferralLink);
-  });
+  if (questReferralBtn) {
+    questReferralBtn.addEventListener("click", shareReferralLink);
+  }
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -312,12 +312,7 @@ async function refreshUserStatus() {
         if (questTelegramDone) questTelegramDone.style.display = "none";
       }
 
-      // Update individual referral milestone quests
-      const friendsCount = state.userStatus.invitedFriendsCount || 0;
-      updateQuestStatus("questRef1", friendsCount >= 1);
-      updateQuestStatus("questRef2", friendsCount >= 2);
-      updateQuestStatus("questRef3", friendsCount >= 3);
-      updateQuestStatus("questRef5", friendsCount >= 5);
+
     } else {
       loadLocalUserStatus();
     }

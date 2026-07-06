@@ -739,32 +739,16 @@ async function handleTelegramUpdate(update, req) {
 
         const referrerRecord = await getUserRecord(referrerId, null);
         if (referrerRecord) {
-          let addedReward = 0;
+          let addedReward = 20;
           await updateUserData(referrerId, referrerRecord.username, (u) => {
-            const prevCount = u.invitedFriendsCount || 0;
-            const newCount = prevCount + 1;
-
-            if (newCount === 1) addedReward = 25;
-            else if (newCount === 2) addedReward = 25;
-            else if (newCount === 3) addedReward = 25;
-            else if (newCount === 5) addedReward = 25;
-            else addedReward = 0;
-
             u.extraSpins = (u.extraSpins || 0) + addedReward;
-            u.invitedFriendsCount = newCount;
+            u.invitedFriendsCount = (u.invitedFriendsCount || 0) + 1;
           });
 
-          if (addedReward > 0) {
-            await callTelegram("sendMessage", {
-              chat_id: referrerId,
-              text: `🎉 По вашей реферальной ссылке зарегистрировался новый пользователь! Вам начислено ${addedReward} дополнительных прокрутов.`
-            });
-          } else {
-            await callTelegram("sendMessage", {
-              chat_id: referrerId,
-              text: `🎉 По вашей реферальной ссылке зарегистрировался новый пользователь!`
-            });
-          }
+          await callTelegram("sendMessage", {
+            chat_id: referrerId,
+            text: `🎉 По вашей реферальной ссылке зарегистрировался новый пользователь! Вам начислено ${addedReward} дополнительных прокрутов.`
+          });
         }
       }
     }
