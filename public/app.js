@@ -43,6 +43,12 @@ const limitOverlay = document.querySelector("#limitOverlay");
 const buyVipButton = document.querySelector("#buyVipButton");
 const buyVipHeaderButton = document.querySelector("#buyVipHeaderButton");
 
+const profileVipBox = document.querySelector("#profileVipBox");
+const profileVipIcon = document.querySelector("#profileVipIcon");
+const profileVipTitle = document.querySelector("#profileVipTitle");
+const profileVipExpiry = document.querySelector("#profileVipExpiry");
+const profileVipBuyBtn = document.querySelector("#profileVipBuyBtn");
+
 init();
 
 async function init() {
@@ -126,6 +132,9 @@ function bindEvents() {
   }
   if (buyVipHeaderButton) {
     buyVipHeaderButton.addEventListener("click", buyVip);
+  }
+  if (profileVipBuyBtn) {
+    profileVipBuyBtn.addEventListener("click", buyVip);
   }
 }
 
@@ -224,7 +233,8 @@ async function refreshUserStatus() {
         isVip: data.isVip,
         readingsToday: data.readingsToday,
         limit: data.limit,
-        nextAvailableInMs: data.nextAvailableInMs
+        nextAvailableInMs: data.nextAvailableInMs,
+        vipUntil: data.vipUntil
       };
     } else {
       loadLocalUserStatus();
@@ -295,7 +305,8 @@ function loadLocalUserStatus() {
       isVip: Boolean(saved.isVip),
       readingsToday: activeTimestamps.length,
       limit: 5,
-      nextAvailableInMs: 0
+      nextAvailableInMs: 0,
+      vipUntil: saved.vipUntil || null
     };
     
     if (activeTimestamps.length >= 5) {
@@ -307,7 +318,8 @@ function loadLocalUserStatus() {
       isVip: false,
       readingsToday: 0,
       limit: 5,
-      nextAvailableInMs: 0
+      nextAvailableInMs: 0,
+      vipUntil: null
     };
   }
 }
@@ -563,6 +575,40 @@ function closeProfile() {
 function renderProfile() {
   if (!profileGrid || state.cards.length === 0) {
     return;
+  }
+
+  // Update VIP status box in profile
+  if (profileVipBox) {
+    const isVip = state.userStatus.isVip;
+    const vipUntil = state.userStatus.vipUntil;
+
+    if (isVip) {
+      profileVipBox.classList.add("is-vip");
+      if (profileVipIcon) profileVipIcon.textContent = "👑";
+      if (profileVipTitle) profileVipTitle.textContent = "VIP-статус активен";
+      
+      if (profileVipExpiry) {
+        if (vipUntil) {
+          const expDate = new Date(vipUntil);
+          const diffMs = expDate.getTime() - Date.now();
+          const diffDays = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+          if (diffDays > 0) {
+            profileVipExpiry.textContent = `Осталось дней: ${diffDays} (до ${expDate.toLocaleDateString("ru-RU")})`;
+          } else {
+            profileVipExpiry.textContent = `Активен до: ${expDate.toLocaleDateString("ru-RU")}`;
+          }
+        } else {
+          profileVipExpiry.textContent = "Срок действия: Неограничен";
+        }
+      }
+      if (profileVipBuyBtn) profileVipBuyBtn.style.display = "none";
+    } else {
+      profileVipBox.classList.remove("is-vip");
+      if (profileVipIcon) profileVipIcon.textContent = "🔒";
+      if (profileVipTitle) profileVipTitle.textContent = "Бесплатная версия";
+      if (profileVipExpiry) profileVipExpiry.textContent = "Лимит: 5 гаданий в день";
+      if (profileVipBuyBtn) profileVipBuyBtn.style.display = "block";
+    }
   }
 
   const discovered = new Set(state.profile.discovered);
