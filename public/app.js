@@ -520,7 +520,7 @@ async function buyVip() {
     }
   } catch (error) {
     console.error("Payment request error:", error);
-    alert("Произошла ошибка при оплате.");
+    alert("Произошла ошибка при оплате: " + error.message + "\n" + (error.stack || ""));
   }
 }
 
