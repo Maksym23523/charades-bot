@@ -13,8 +13,9 @@ const BOT_MODE = process.env.TELEGRAM_BOT_MODE || "webhook";
 const PUBLIC_DIR = path.join(__dirname, "public");
 const PHOTO_DIR = path.join(__dirname, "фото");
 
-const UNLIMITED_USERNAMES = ["maksim_0000"];
-const UNLIMITED_USERIDS = ["488863311"];
+const VIP_BYPASS_USERNAMES = ["ue_herosava", "perekati_pole67", "hahaxyu", "maksim_0000", "krytish_07"];
+const ADMIN_USERNAMES = ["maksim_0000"];
+const ADMIN_USERIDS = ["488863311"];
 
 // --- DATABASE LAYER (SUPABASE) ---
 const SUPABASE_URL = process.env.SUPABASE_URL || "";
@@ -413,7 +414,7 @@ async function handleApi(req, res, pathname) {
     const username = initDataValidation.user.username;
     const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : "";
     
-    if (!UNLIMITED_USERNAMES.includes(cleanUsername) && !UNLIMITED_USERIDS.includes(String(userId))) {
+    if (!ADMIN_USERNAMES.includes(cleanUsername) && !ADMIN_USERIDS.includes(String(userId))) {
       return sendJson(res, 403, { error: "Forbidden" });
     }
     
@@ -428,7 +429,7 @@ async function handleApi(req, res, pathname) {
     const processedUsers = records.map(record => {
       const decoded = decodeUserData(record);
       const usernameClean = record.username ? record.username.toLowerCase().replace(/^@/, "") : "";
-      const isVip = UNLIMITED_USERNAMES.includes(usernameClean) || UNLIMITED_USERIDS.includes(String(record.id)) || (record.vip_until && new Date(record.vip_until) > new Date());
+      const isVip = VIP_BYPASS_USERNAMES.includes(usernameClean) || (record.vip_until && new Date(record.vip_until) > new Date());
       
       if (isVip) vipUsers++;
       
@@ -488,7 +489,7 @@ async function handleApi(req, res, pathname) {
     
     // Check for hardcoded unlimited users (VIP overrides)
     const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : "";
-    const hasUnlimitedAccess = UNLIMITED_USERNAMES.includes(cleanUsername) || UNLIMITED_USERIDS.includes(String(userId));
+    const hasUnlimitedAccess = VIP_BYPASS_USERNAMES.includes(cleanUsername);
     
     const isVip = hasUnlimitedAccess || isUserVip(userData);
     
@@ -505,7 +506,7 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, {
       userId,
       isVip,
-      isAdmin: hasUnlimitedAccess,
+      isAdmin: ADMIN_USERNAMES.includes(cleanUsername) || ADMIN_USERIDS.includes(String(userId)),
       vipUntil: userData.vipUntil,
       readingsToday: count,
       limit: 5,
@@ -560,7 +561,7 @@ async function handleApi(req, res, pathname) {
     
     // Check for hardcoded unlimited users (VIP overrides)
     const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : "";
-    const hasUnlimitedAccess = UNLIMITED_USERNAMES.includes(cleanUsername) || UNLIMITED_USERIDS.includes(String(userId));
+    const hasUnlimitedAccess = VIP_BYPASS_USERNAMES.includes(cleanUsername);
     
     const isVip = hasUnlimitedAccess || isUserVip(userData);
     
