@@ -532,7 +532,6 @@ async function handleApi(req, res, pathname) {
       title: "VIP Статус — 1 месяц",
       description: "Безлимитные гадания и доступ к полной коллекции карт на 30 дней",
       payload: `vip_subscription_30days_${userId}_${Date.now()}`,
-      provider_token: "", // Must be empty for Telegram Stars
       currency: "XTR",
       prices: [
         { label: "VIP Статус", amount: 99 }
