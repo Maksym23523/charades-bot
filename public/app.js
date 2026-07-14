@@ -583,14 +583,9 @@ function renderReading(reading, pick) {
 
     // Populate card text details in the result panel
     if (resultTextBox) {
-      const untouchedCardIds = [3, 7, 10, 17];
-      if (untouchedCardIds.includes(card.id)) {
-        resultTextBox.style.display = "none";
-      } else {
-        if (resultCardTitle) resultCardTitle.textContent = card.title || "";
-        if (resultCardMeaning) resultCardMeaning.textContent = card.meaning || "";
-        resultTextBox.style.display = "block";
-      }
+      if (resultCardTitle) resultCardTitle.textContent = card.title || "";
+      if (resultCardMeaning) resultCardMeaning.textContent = card.meaning || "";
+      resultTextBox.style.display = "block";
     }
   });
 
