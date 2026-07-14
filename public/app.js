@@ -587,6 +587,17 @@ function renderReading(reading, pick) {
       if (resultCardMeaning) resultCardMeaning.textContent = card.meaning || "";
       resultTextBox.style.display = "block";
     }
+
+    if (card.id === 18) {
+      const audioFiles = [
+        "/media/видео 1 (online-audio-converter.com).mp3",
+        "/media/видео 2.mp3",
+        "/media/видео 3.mp3"
+      ];
+      const randomAudio = audioFiles[Math.floor(Math.random() * audioFiles.length)];
+      const audio = new Audio(encodeURI(randomAudio));
+      audio.play().catch((err) => console.error("Audio playback failed:", err));
+    }
   });
 
   resultPanel.hidden = false;

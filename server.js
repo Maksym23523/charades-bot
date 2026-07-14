@@ -343,6 +343,7 @@ const mimeTypes = {
   ".json": "application/json; charset=utf-8",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
+  ".mp3": "audio/mpeg",
   ".mp4": "video/mp4",
   ".png": "image/png",
   ".svg": "image/svg+xml"
