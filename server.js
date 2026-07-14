@@ -401,6 +401,66 @@ server.listen(PORT, async () => {
 });
 
 async function handleApi(req, res, pathname) {
+  if (req.method === "POST" && pathname === "/api/admin/stats") {
+    const body = await readJson(req);
+    const initDataValidation = validateTelegramInitData(body.initData || "");
+    if (!initDataValidation.valid || !initDataValidation.user) {
+      return sendJson(res, 401, { error: "Unauthorized" });
+    }
+    
+    const username = initDataValidation.user.username;
+    const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : "";
+    
+    if (!UNLIMITED_USERNAMES.includes(cleanUsername)) {
+      return sendJson(res, 403, { error: "Forbidden" });
+    }
+    
+    const records = await callSupabase("users") || [];
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    
+    let totalUsers = records.length;
+    let vipUsers = 0;
+    let activeUsersToday = 0;
+    let totalDrawsToday = 0;
+    
+    const processedUsers = records.map(record => {
+      const decoded = decodeUserData(record);
+      const usernameClean = record.username ? record.username.toLowerCase().replace(/^@/, "") : "";
+      const isVip = UNLIMITED_USERNAMES.includes(usernameClean) || (record.vip_until && new Date(record.vip_until) > new Date());
+      
+      if (isVip) vipUsers++;
+      
+      const todayTimestamps = decoded.readingTimestamps.filter(t => t > oneDayAgo);
+      const drawsTodayCount = todayTimestamps.length;
+      if (drawsTodayCount > 0) {
+        activeUsersToday++;
+        totalDrawsToday += drawsTodayCount;
+      }
+      
+      return {
+        id: record.id,
+        username: record.username || "unknown",
+        isVip,
+        vipUntil: record.vip_until,
+        drawsTodayCount,
+        invitedFriendsCount: decoded.invitedFriendsCount,
+        extraSpins: decoded.extraSpins
+      };
+    });
+    
+    processedUsers.sort((a, b) => b.drawsTodayCount - a.drawsTodayCount || a.username.localeCompare(b.username));
+    
+    return sendJson(res, 200, {
+      stats: {
+        totalUsers,
+        vipUsers,
+        activeUsersToday,
+        totalDrawsToday
+      },
+      users: processedUsers
+    });
+  }
+
   if (req.method === "GET" && pathname === "/api/cards") {
     return sendJson(res, 200, { cards: getCards() });
   }
@@ -443,6 +503,7 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, {
       userId,
       isVip,
+      isAdmin: hasUnlimitedAccess,
       vipUntil: userData.vipUntil,
       readingsToday: count,
       limit: 5,

@@ -1260,3 +1260,160 @@ textarea:focus {
   margin-left: 6px;
   text-shadow: 0 2px 8px rgba(214, 169, 79, 0.3);
 }
+
+/* Admin Panel Styles */
+.admin-header-button {
+  background: linear-gradient(135deg, #8e2de2, #4a00e0);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(142, 45, 226, 0.35);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  margin-left: 8px;
+}
+
+.admin-header-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(142, 45, 226, 0.5);
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 480px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.admin-stat-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.admin-stat-box .stat-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: #a855f7;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+  margin-bottom: 4px;
+}
+
+.admin-stat-box .stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.admin-users-section {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 12px;
+}
+
+.admin-search-wrapper input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 14px;
+  margin-bottom: 12px;
+  outline: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.2s ease;
+}
+
+.admin-search-wrapper input:focus {
+  border-color: #a855f7;
+}
+
+.admin-users-list {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Custom Scrollbar for users list */
+.admin-users-list::-webkit-scrollbar {
+  width: 4px;
+}
+.admin-users-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-users-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.admin-user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 13px;
+}
+
+.admin-user-item:last-child {
+  border-bottom: none;
+}
+
+.admin-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-user-name {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.admin-user-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.admin-user-badge-vip {
+  font-size: 10px;
+  font-weight: 800;
+  color: #eab308;
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  text-shadow: 0 1px 4px rgba(234, 179, 8, 0.2);
+}
+
+.admin-user-draws {
+  text-align: right;
+}
+
+.admin-user-draws-count {
+  font-weight: 800;
+  color: #10b981;
+}
+
+.admin-user-draws-label {
+  font-size: 10px;
+  color: var(--muted);
+  display: block;
+}

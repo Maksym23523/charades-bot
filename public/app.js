@@ -10,6 +10,7 @@ const state = {
   profileKey: PROFILE_STORAGE_PREFIX,
   userStatus: {
     isVip: false,
+    isAdmin: false,
     readingsToday: 0,
     limit: 5,
     extraSpins: 0,
@@ -299,6 +300,7 @@ async function refreshUserStatus() {
       const data = await response.json();
       state.userStatus = {
         isVip: data.isVip,
+        isAdmin: data.isAdmin || false,
         readingsToday: data.readingsToday,
         limit: data.limit,
         nextAvailableInMs: data.nextAvailableInMs,
@@ -309,6 +311,11 @@ async function refreshUserStatus() {
         botUsername: data.botUsername || "",
         telegramChannelUsername: data.telegramChannelUsername || ""
       };
+      
+      const adminBtn = document.querySelector("#adminHeaderButton");
+      if (adminBtn) {
+        adminBtn.style.display = state.userStatus.isAdmin ? "inline-block" : "none";
+      }
       
       // Update Quests panel values
       if (refCount) {
@@ -908,4 +915,159 @@ function updateQuestStatus(elementId, isCompleted) {
     if (inviteBtn) inviteBtn.style.display = "inline-flex";
     if (doneSpan) doneSpan.style.display = "none";
   }
+}
+
+// --- ADMIN PANEL SECTION ---
+const adminPanel = document.querySelector("#adminPanel");
+const closeAdminButton = document.querySelector("#closeAdminButton");
+const adminHeaderButton = document.querySelector("#adminHeaderButton");
+const adminUserSearch = document.querySelector("#adminUserSearch");
+const adminUsersList = document.querySelector("#adminUsersList");
+
+let adminStatsData = null;
+
+if (adminHeaderButton) {
+  adminHeaderButton.addEventListener("click", openAdminPanel);
+}
+if (closeAdminButton) {
+  closeAdminButton.addEventListener("click", closeAdminPanel);
+}
+if (adminPanel) {
+  adminPanel.addEventListener("click", (event) => {
+    if (event.target === adminPanel) {
+      closeAdminPanel();
+    }
+  });
+}
+if (adminUserSearch) {
+  adminUserSearch.addEventListener("input", filterAdminUsers);
+}
+
+async function openAdminPanel() {
+  if (!adminPanel) return;
+  adminPanel.hidden = false;
+  adminPanel.offsetHeight;
+  adminPanel.classList.add("is-active");
+  document.body.classList.add("has-modal");
+  
+  await loadAdminStats();
+}
+
+function closeAdminPanel() {
+  if (!adminPanel) return;
+  adminPanel.classList.remove("is-active");
+  document.body.classList.remove("has-modal");
+  setTimeout(() => {
+    if (adminPanel && !adminPanel.classList.contains("is-active")) {
+      adminPanel.hidden = true;
+    }
+  }, 300);
+}
+
+async function loadAdminStats() {
+  if (!adminUsersList) return;
+  try {
+    adminUsersList.innerHTML = "<p style='text-align:center;color:var(--muted);padding:20px;'>Загрузка...</p>";
+    
+    const response = await fetch("/api/admin/stats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: tg ? tg.initData : "" })
+    });
+    
+    if (!response.ok) {
+      adminUsersList.innerHTML = "<p style='text-align:center;color:#ff4a4a;padding:20px;'>Доступ ограничен</p>";
+      return;
+    }
+    
+    const data = await response.json();
+    adminStatsData = data;
+    
+    const totUsersEl = document.querySelector("#statTotalUsers");
+    const vipUsersEl = document.querySelector("#statVipUsers");
+    const actTodayEl = document.querySelector("#statActiveToday");
+    const totDrawsEl = document.querySelector("#statTotalDraws");
+    
+    if (totUsersEl) totUsersEl.textContent = data.stats.totalUsers;
+    if (vipUsersEl) vipUsersEl.textContent = data.stats.vipUsers;
+    if (actTodayEl) actTodayEl.textContent = data.stats.activeUsersToday;
+    if (totDrawsEl) totDrawsEl.textContent = data.stats.totalDrawsToday;
+    
+    renderAdminUsers(data.users);
+  } catch (error) {
+    console.error(error);
+    adminUsersList.innerHTML = "<p style='text-align:center;color:#ff4a4a;padding:20px;'>Ошибка загрузки</p>";
+  }
+}
+
+function renderAdminUsers(users) {
+  if (!adminUsersList) return;
+  adminUsersList.innerHTML = "";
+  if (users.length === 0) {
+    adminUsersList.innerHTML = "<p style='text-align:center;color:var(--muted);padding:20px;'>Пользователи не найдены</p>";
+    return;
+  }
+  
+  users.forEach(user => {
+    const item = document.createElement("div");
+    item.className = "admin-user-item";
+    
+    const info = document.createElement("div");
+    info.className = "admin-user-info";
+    
+    const nameWrap = document.createElement("div");
+    nameWrap.style.display = "flex";
+    nameWrap.style.alignItems = "center";
+    
+    const name = document.createElement("span");
+    name.className = "admin-user-name";
+    name.textContent = user.username && user.username !== "unknown" ? `@${user.username}` : `id: ${user.id}`;
+    nameWrap.appendChild(name);
+    
+    if (user.isVip) {
+      const badge = document.createElement("span");
+      badge.className = "admin-user-badge-vip";
+      badge.textContent = "VIP";
+      nameWrap.appendChild(badge);
+    }
+    
+    const meta = document.createElement("span");
+    meta.className = "admin-user-meta";
+    meta.textContent = `Спинов: ${user.extraSpins} | Рефералов: ${user.invitedFriendsCount}`;
+    
+    info.appendChild(nameWrap);
+    info.appendChild(meta);
+    
+    const draws = document.createElement("div");
+    draws.className = "admin-user-draws";
+    
+    const drawsCount = document.createElement("span");
+    drawsCount.className = "admin-user-draws-count";
+    drawsCount.textContent = user.drawsTodayCount;
+    
+    const drawsLabel = document.createElement("span");
+    drawsLabel.className = "admin-user-draws-label";
+    drawsLabel.textContent = "за 24ч";
+    
+    draws.appendChild(drawsCount);
+    draws.appendChild(drawsLabel);
+    
+    item.appendChild(info);
+    item.appendChild(draws);
+    
+    adminUsersList.appendChild(item);
+  });
+}
+
+function filterAdminUsers() {
+  if (!adminStatsData || !adminStatsData.users) return;
+  const query = adminUserSearch.value.toLowerCase().trim();
+  
+  const filtered = adminStatsData.users.filter(user => {
+    const username = (user.username || "").toLowerCase();
+    const id = String(user.id);
+    return username.includes(query) || id.includes(query);
+  });
+  
+  renderAdminUsers(filtered);
 }
