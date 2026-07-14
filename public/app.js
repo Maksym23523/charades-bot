@@ -28,6 +28,12 @@ const resultCards = document.querySelector("#resultCards");
 const resultTitle = document.querySelector("#resultTitle");
 const resetButton = document.querySelector("#resetButton");
 const sendButton = document.querySelector("#sendButton");
+
+const globalAudios = [
+  new Audio(encodeURI("/media/видео 1 (online-audio-converter.com).mp3")),
+  new Audio(encodeURI("/media/видео 2.mp3")),
+  new Audio(encodeURI("/media/видео 3.mp3"))
+];
 const profileButton = document.querySelector("#profileButton");
 const profilePanel = document.querySelector("#profilePanel");
 const closeProfileButton = document.querySelector("#closeProfileButton");
@@ -126,6 +132,15 @@ function bindEvents() {
   pickButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const pick = Number(button.dataset.pick);
+      // Pre-unlock audio files on user click to bypass iOS WebKit autoplay policy
+      globalAudios.forEach((audio) => {
+        audio.play().then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }).catch(() => {
+          audio.load();
+        });
+      });
       drawReading(pick);
     });
   });
@@ -589,13 +604,9 @@ function renderReading(reading, pick) {
     }
 
     if (card.id === 18) {
-      const audioFiles = [
-        "/media/видео 1 (online-audio-converter.com).mp3",
-        "/media/видео 2.mp3",
-        "/media/видео 3.mp3"
-      ];
-      const randomAudio = audioFiles[Math.floor(Math.random() * audioFiles.length)];
-      const audio = new Audio(encodeURI(randomAudio));
+      const randomIndex = Math.floor(Math.random() * globalAudios.length);
+      const audio = globalAudios[randomIndex];
+      audio.currentTime = 0;
       audio.play().catch((err) => console.error("Audio playback failed:", err));
     }
   });
