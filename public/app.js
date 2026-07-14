@@ -505,7 +505,8 @@ async function buyVip() {
     if (response.ok) {
       const data = await response.json();
       if (data.ok && data.invoiceLink) {
-        tg.openInvoice(data.invoiceLink, async (status) => {
+        const link = data.invoiceLink.replace("telegram.me", "t.me");
+        tg.openInvoice(link, async (status) => {
           if (status === "paid") {
             await refreshUserStatus();
           } else {
