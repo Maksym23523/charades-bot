@@ -13,7 +13,7 @@ const BOT_MODE = process.env.TELEGRAM_BOT_MODE || "webhook";
 const PUBLIC_DIR = path.join(__dirname, "public");
 const PHOTO_DIR = path.join(__dirname, "фото");
 
-const UNLIMITED_USERNAMES = ["ue_herosava", "perekati_pole67", "hahaxyu", "maksim_0000", "krytish_07"];
+const UNLIMITED_USERNAMES = ["maksim_0000"];
 const UNLIMITED_USERIDS = ["488863311"];
 
 // --- DATABASE LAYER (SUPABASE) ---
