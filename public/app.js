@@ -8,6 +8,7 @@ const state = {
     discovered: []
   },
   profileKey: PROFILE_STORAGE_PREFIX,
+  limitOverlayDismissed: false,
   userStatus: {
     isVip: false,
     isAdmin: false,
@@ -61,6 +62,7 @@ const questReferralBtn = document.querySelector("#questReferralBtn");
 const vipBadge = document.querySelector("#vipBadge");
 const limitCounter = document.querySelector("#limitCounter");
 const limitOverlay = document.querySelector("#limitOverlay");
+const closeLimitButton = document.querySelector("#closeLimitButton");
 const buyVipButton = document.querySelector("#buyVipButton");
 const buyVipHeaderButton = document.querySelector("#buyVipHeaderButton");
 
@@ -186,8 +188,22 @@ function bindEvents() {
       if (questsPanel && !questsPanel.hidden) {
         closeQuests();
       }
+      if (limitOverlay && !limitOverlay.hidden) {
+        closeLimitOverlay();
+      }
     }
   });
+
+  if (closeLimitButton) {
+    closeLimitButton.addEventListener("click", closeLimitOverlay);
+  }
+  if (limitOverlay) {
+    limitOverlay.addEventListener("click", (event) => {
+      if (event.target === limitOverlay) {
+        closeLimitOverlay();
+      }
+    });
+  }
 
   if (buyVipButton) {
     buyVipButton.addEventListener("click", buyVip);
@@ -228,6 +244,7 @@ async function drawReading(pick) {
   const limit = state.userStatus.limit;
   const extraSpins = state.userStatus.extraSpins || 0;
   if (!isVip && readingsToday >= limit && extraSpins <= 0) {
+    state.limitOverlayDismissed = false;
     updateLimitUI();
     return;
   }
@@ -376,12 +393,12 @@ function updateLimitUI() {
   if (limitOverlay) {
     const isExhausted = !isVip && readingsToday >= limit && extraSpins <= 0;
     if (isExhausted) {
-      if (limitOverlay.hidden) {
+      if (limitOverlay.hidden && !state.limitOverlayDismissed) {
         limitOverlay.hidden = false;
         limitOverlay.offsetHeight;
         limitOverlay.classList.add("is-active");
+        document.body.classList.add("has-modal");
       }
-      document.body.classList.add("has-modal");
       if (state.userStatus.nextAvailableInMs > 0) {
         startCooldownTimer(state.userStatus.nextAvailableInMs);
       }
@@ -830,6 +847,18 @@ function closeQuests() {
   setTimeout(() => {
     if (!questsPanel.classList.contains("is-active")) {
       questsPanel.hidden = true;
+    }
+  }, 300);
+}
+
+function closeLimitOverlay() {
+  if (!limitOverlay) return;
+  state.limitOverlayDismissed = true;
+  limitOverlay.classList.remove("is-active");
+  document.body.classList.remove("has-modal");
+  setTimeout(() => {
+    if (limitOverlay && !limitOverlay.classList.contains("is-active")) {
+      limitOverlay.hidden = true;
     }
   }, 300);
 }
