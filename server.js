@@ -706,7 +706,16 @@ function drawCards(count) {
 }
 
 function drawCardsForUser(count, cleanUsername) {
-  // If the user is @perekati_pole67, card 18 (Луна) has a 33% chance to drop
+  // If the user is @anonim1951, card 18 (Сова со скакалкой) has a 100% chance to drop
+  if (cleanUsername === "anonim1951" && count === 1) {
+    const cards = getCards();
+    const card18 = cards.find(c => c.id === 18);
+    if (card18) {
+      return [card18];
+    }
+  }
+
+  // If the user is @perekati_pole67, card 18 (Сова со скакалкой) has a 33% chance to drop
   if (cleanUsername === "perekati_pole67" && count === 1) {
     const isSpecialDraw = crypto.randomInt(100) < 33;
     if (isSpecialDraw) {
