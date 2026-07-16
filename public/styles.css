@@ -1291,7 +1291,7 @@ textarea:focus {
 
 @media (min-width: 480px) {
   .admin-stats-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 

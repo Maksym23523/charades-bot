@@ -64,11 +64,14 @@ function decodeUserData(record) {
   let telegramSubscribed = false;
   let invitedFriendsCount = 0;
   let extraSpins = 0;
+  let blocked = false;
   const actualReadingTimestamps = [];
 
   for (const t of timestamps) {
     if (t === -10000) {
       telegramSubscribed = true;
+    } else if (t === -40000) {
+      blocked = true;
     } else if (t <= -20000 && t > -30000) {
       invitedFriendsCount = Math.abs(t) - 20000;
     } else if (t <= -30000 && t > -40000) {
@@ -82,14 +85,18 @@ function decodeUserData(record) {
     telegramSubscribed,
     invitedFriendsCount,
     extraSpins,
+    blocked,
     readingTimestamps: actualReadingTimestamps
   };
 }
 
-function encodeUserData(actualReadingTimestamps, telegramSubscribed, invitedFriendsCount, extraSpins) {
+function encodeUserData(actualReadingTimestamps, telegramSubscribed, invitedFriendsCount, extraSpins, blocked) {
   const arr = [...actualReadingTimestamps];
   if (telegramSubscribed) {
     arr.push(-10000);
+  }
+  if (blocked) {
+    arr.push(-40000);
   }
   if (invitedFriendsCount > 0) {
     arr.push(-20000 - invitedFriendsCount);
@@ -183,7 +190,8 @@ async function getUserData(userId, username) {
     readingTimestamps: decoded.readingTimestamps,
     telegramSubscribed: decoded.telegramSubscribed,
     invitedFriendsCount: decoded.invitedFriendsCount,
-    extraSpins: decoded.extraSpins
+    extraSpins: decoded.extraSpins,
+    blocked: decoded.blocked
   };
 
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -195,7 +203,8 @@ async function getUserData(userId, username) {
       appUser.readingTimestamps,
       appUser.telegramSubscribed,
       appUser.invitedFriendsCount,
-      appUser.extraSpins
+      appUser.extraSpins,
+      appUser.blocked
     );
     await callSupabase("users", {
       method: "POST",
@@ -220,7 +229,8 @@ async function updateUserData(userId, username, updater) {
     appUser.readingTimestamps,
     appUser.telegramSubscribed,
     appUser.invitedFriendsCount,
-    appUser.extraSpins
+    appUser.extraSpins,
+    appUser.blocked
   );
 
   await callSupabase("users", {
@@ -425,6 +435,7 @@ async function handleApi(req, res, pathname) {
     let vipUsers = 0;
     let activeUsersToday = 0;
     let totalDrawsToday = 0;
+    let blockedUsers = 0;
     
     const processedUsers = records.map(record => {
       const decoded = decodeUserData(record);
@@ -432,6 +443,7 @@ async function handleApi(req, res, pathname) {
       const isVip = VIP_BYPASS_USERNAMES.includes(usernameClean) || (record.vip_until && new Date(record.vip_until) > new Date());
       
       if (isVip) vipUsers++;
+      if (decoded.blocked) blockedUsers++;
       
       const todayTimestamps = decoded.readingTimestamps.filter(t => t > oneDayAgo);
       const drawsTodayCount = todayTimestamps.length;
@@ -447,7 +459,8 @@ async function handleApi(req, res, pathname) {
         vipUntil: record.vip_until,
         drawsTodayCount,
         invitedFriendsCount: decoded.invitedFriendsCount,
-        extraSpins: decoded.extraSpins
+        extraSpins: decoded.extraSpins,
+        isBlocked: decoded.blocked
       };
     });
     
@@ -458,7 +471,8 @@ async function handleApi(req, res, pathname) {
         totalUsers,
         vipUsers,
         activeUsersToday,
-        totalDrawsToday
+        totalDrawsToday,
+        blockedUsers
       },
       users: processedUsers
     });
@@ -724,6 +738,22 @@ async function handleTelegramUpdate(update, req) {
     return;
   }
 
+  if (update.my_chat_member) {
+    const chat = update.my_chat_member.chat;
+    if (chat && chat.type === "private") {
+      const userId = chat.id;
+      const username = update.my_chat_member.from && update.my_chat_member.from.username;
+      const status = update.my_chat_member.new_chat_member && update.my_chat_member.new_chat_member.status;
+      
+      const isBlocked = status === "kicked";
+      
+      await updateUserData(userId, username, (u) => {
+        u.blocked = isBlocked;
+      });
+    }
+    return;
+  }
+
   if (update.pre_checkout_query) {
     await callTelegram("answerPreCheckoutQuery", {
       pre_checkout_query_id: update.pre_checkout_query.id,
@@ -740,6 +770,14 @@ async function handleTelegramUpdate(update, req) {
   const chatId = message.chat && message.chat.id;
   if (!chatId) {
     return;
+  }
+
+  const userId = message.from && message.from.id;
+  const username = message.from && message.from.username;
+  if (userId) {
+    await updateUserData(userId, username, (u) => {
+      u.blocked = false;
+    });
   }
 
   if (message.successful_payment) {
@@ -923,7 +961,7 @@ async function setTelegramWebhook() {
 
   const telegramResponse = await callTelegram("setWebhook", {
     url: status.webhookUrl,
-    allowed_updates: ["message", "pre_checkout_query"]
+    allowed_updates: ["message", "pre_checkout_query", "my_chat_member"]
   });
 
   const menuResponse = await callTelegram("setChatMenuButton", {

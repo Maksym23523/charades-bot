@@ -1017,11 +1017,13 @@ async function loadAdminStats() {
     const vipUsersEl = document.querySelector("#statVipUsers");
     const actTodayEl = document.querySelector("#statActiveToday");
     const totDrawsEl = document.querySelector("#statTotalDraws");
+    const blkUsersEl = document.querySelector("#statBlockedUsers");
     
     if (totUsersEl) totUsersEl.textContent = data.stats.totalUsers;
     if (vipUsersEl) vipUsersEl.textContent = data.stats.vipUsers;
     if (actTodayEl) actTodayEl.textContent = data.stats.activeUsersToday;
     if (totDrawsEl) totDrawsEl.textContent = data.stats.totalDrawsToday;
+    if (blkUsersEl) blkUsersEl.textContent = data.stats.blockedUsers || 0;
     
     renderAdminUsers(data.users);
   } catch (error) {
@@ -1059,6 +1061,14 @@ function renderAdminUsers(users) {
       badge.className = "admin-user-badge-vip";
       badge.textContent = "VIP";
       nameWrap.appendChild(badge);
+    }
+    
+    if (user.isBlocked) {
+      const blockBadge = document.createElement("span");
+      blockBadge.className = "admin-user-badge-vip"; // we can reuse classes or define custom inline styles
+      blockBadge.style.cssText = "font-size: 10px; font-weight: 800; color: #ef4444; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 6px; border-radius: 4px; margin-left: 6px; text-shadow: 0 1px 4px rgba(239, 68, 68, 0.2);";
+      blockBadge.textContent = "Блок";
+      nameWrap.appendChild(blockBadge);
     }
     
     const meta = document.createElement("span");
