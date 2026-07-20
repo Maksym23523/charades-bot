@@ -63,6 +63,7 @@ const vipBadge = document.querySelector("#vipBadge");
 const limitCounter = document.querySelector("#limitCounter");
 const limitOverlay = document.querySelector("#limitOverlay");
 const closeLimitButton = document.querySelector("#closeLimitButton");
+const limitQuestsButton = document.querySelector("#limitQuestsButton");
 const buyVipButton = document.querySelector("#buyVipButton");
 const buyVipHeaderButton = document.querySelector("#buyVipHeaderButton");
 
@@ -196,6 +197,12 @@ function bindEvents() {
 
   if (closeLimitButton) {
     closeLimitButton.addEventListener("click", closeLimitOverlay);
+  }
+  if (limitQuestsButton) {
+    limitQuestsButton.addEventListener("click", () => {
+      closeLimitOverlay();
+      openQuests();
+    });
   }
   if (limitOverlay) {
     limitOverlay.addEventListener("click", (event) => {
