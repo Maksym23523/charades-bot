@@ -359,7 +359,7 @@ function shareToStory() {
 
   const card = state.lastReading.cards[0];
   const absoluteMediaUrl = new URL(card.imageUrl, window.location.href).href;
-  const captionText = `🔮 Моё гадание в CHARADES: «${card.title}» — ${card.meaning}`;
+  const captionText = `🔮 Моё гадание в CHARADES: «${card.title}»`;
   
   const botUsername = (state.userStatus && state.userStatus.botUsername)
     ? state.userStatus.botUsername.replace("@", "")
@@ -949,7 +949,6 @@ function renderReading(reading, pick) {
     // Populate card text details in the result panel
     if (resultTextBox) {
       if (resultCardTitle) resultCardTitle.textContent = card.title || "";
-      if (resultCardMeaning) resultCardMeaning.textContent = card.meaning || "";
       resultTextBox.style.display = "block";
     }
 
