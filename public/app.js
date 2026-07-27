@@ -132,18 +132,37 @@ function setThemeColor(name, value) {
   }
 }
 
+function stopAllAudios() {
+  globalAudios.forEach((audio) => {
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+    } catch (e) {}
+  });
+}
+
 function bindEvents() {
   pickButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const pick = Number(button.dataset.pick);
-      // Pre-unlock audio files on user click to bypass iOS WebKit autoplay policy
+      stopAllAudios();
+      // Pre-unlock audio files silently on user click to bypass iOS WebKit autoplay policy without sound leaks
       globalAudios.forEach((audio) => {
-        audio.play().then(() => {
+        audio.muted = true;
+        const p = audio.play();
+        if (p && typeof p.then === "function") {
+          p.then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.muted = false;
+          }).catch(() => {
+            audio.muted = false;
+          });
+        } else {
           audio.pause();
           audio.currentTime = 0;
-        }).catch(() => {
-          audio.load();
-        });
+          audio.muted = false;
+        }
       });
       drawReading(pick);
     });
@@ -615,6 +634,7 @@ function setDrawBusy(isBusy, pick = null) {
 }
 
 function renderReading(reading, pick) {
+  stopAllAudios();
   const cards = reading.cards || [];
 
   resultCards.innerHTML = "";
@@ -638,6 +658,7 @@ function renderReading(reading, pick) {
     if (card.id === 18) {
       const randomIndex = Math.floor(Math.random() * globalAudios.length);
       const audio = globalAudios[randomIndex];
+      audio.muted = false;
       audio.currentTime = 0;
       audio.play().catch((err) => console.error("Audio playback failed:", err));
     }
@@ -648,6 +669,7 @@ function renderReading(reading, pick) {
 }
 
 function resetReading() {
+  stopAllAudios();
   state.lastReading = null;
   resultPanel.hidden = true;
   if (resultTextBox) {
