@@ -31,11 +31,14 @@ const resultTitle = document.querySelector("#resultTitle");
 const resetButton = document.querySelector("#resetButton");
 const sendButton = document.querySelector("#sendButton");
 
-const globalAudios = [
+const card15Audio = new Audio(encodeURI("/media/карта 15 а1.mp3"));
+const card16Audio = new Audio(encodeURI("/media/карта 16 а1.mp3"));
+const card18Audios = [
   new Audio(encodeURI("/media/видео 1 (online-audio-converter.com).mp3")),
   new Audio(encodeURI("/media/видео 2.mp3")),
   new Audio(encodeURI("/media/видео 3.mp3"))
 ];
+const globalAudios = [card15Audio, card16Audio, ...card18Audios];
 const profileButton = document.querySelector("#profileButton");
 const profilePanel = document.querySelector("#profilePanel");
 const closeProfileButton = document.querySelector("#closeProfileButton");
@@ -950,9 +953,17 @@ function renderReading(reading, pick) {
       resultTextBox.style.display = "block";
     }
 
-    if (card.id === 18) {
-      const randomIndex = Math.floor(Math.random() * globalAudios.length);
-      const audio = globalAudios[randomIndex];
+    if (card.id === 15) {
+      card15Audio.muted = false;
+      card15Audio.currentTime = 0;
+      card15Audio.play().catch((err) => console.error("Audio playback failed:", err));
+    } else if (card.id === 16) {
+      card16Audio.muted = false;
+      card16Audio.currentTime = 0;
+      card16Audio.play().catch((err) => console.error("Audio playback failed:", err));
+    } else if (card.id === 18) {
+      const randomIndex = Math.floor(Math.random() * card18Audios.length);
+      const audio = card18Audios[randomIndex];
       audio.muted = false;
       audio.currentTime = 0;
       audio.play().catch((err) => console.error("Audio playback failed:", err));
