@@ -1721,3 +1721,44 @@ textarea:focus {
   box-shadow: none;
   cursor: not-allowed;
 }
+
+/* Telegram Story Share Button Styles */
+.result-actions-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.share-story-button {
+  width: 100%;
+  background: linear-gradient(135deg, #0088cc, #8a2be2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 18px rgba(0, 136, 204, 0.35);
+  transition: all 0.25s ease;
+}
+
+.share-story-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(138, 43, 226, 0.45);
+  background: linear-gradient(135deg, #0099ee, #9b30ff);
+}
+
+.share-story-button:active {
+  transform: scale(0.98);
+}
+
+.story-mark {
+  font-size: 18px;
+}

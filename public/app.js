@@ -99,6 +99,8 @@ const closeStreakButton = document.querySelector("#closeStreakButton");
 const streakDaysGrid = document.querySelector("#streakDaysGrid");
 const claimStreakActionBtn = document.querySelector("#claimStreakActionBtn");
 
+const shareStoryButton = document.querySelector("#shareStoryButton");
+
 const STICKER_PACK_URL = "https://t.me/addstickers/Charades5";
 
 init();
@@ -343,6 +345,46 @@ async function claimStreakReward() {
   }
 }
 
+function shareToStory() {
+  if (!state.lastReading || !state.lastReading.cards || state.lastReading.cards.length === 0) {
+    return;
+  }
+
+  const card = state.lastReading.cards[0];
+  const absoluteMediaUrl = new URL(card.imageUrl, window.location.href).href;
+  const captionText = `🔮 Моё гадание в CHARADES: «${card.title}» — ${card.meaning}`;
+  
+  const botUsername = (state.userStatus && state.userStatus.botUsername)
+    ? state.userStatus.botUsername.replace("@", "")
+    : "charadesgame_bot";
+
+  const appUrl = `https://t.me/${botUsername}`;
+
+  if (tg && typeof tg.shareToStory === "function") {
+    try {
+      tg.shareToStory(absoluteMediaUrl, {
+        text: captionText,
+        widget_link: {
+          url: appUrl,
+          name: "Гадать в CHARADES"
+        }
+      });
+      return;
+    } catch (e) {
+      console.error("tg.shareToStory error, falling back to share link:", e);
+    }
+  }
+
+  const shareText = `${captionText}\n\nПопробуй гадание в CHARADES 👇`;
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(shareText)}`;
+  
+  if (tg && typeof tg.openTelegramLink === "function") {
+    tg.openTelegramLink(shareUrl);
+  } else {
+    window.open(shareUrl, "_blank");
+  }
+}
+
 function bindEvents() {
   pickButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -373,6 +415,9 @@ function bindEvents() {
   resetButton.addEventListener("click", resetReading);
   if (sendButton) {
     sendButton.addEventListener("click", sendReadingToTelegram);
+  }
+  if (shareStoryButton) {
+    shareStoryButton.addEventListener("click", shareToStory);
   }
   profileButton.addEventListener("click", openProfile);
   closeProfileButton.addEventListener("click", closeProfile);
