@@ -265,15 +265,16 @@ async function updateUserData(userId, username, updater) {
   });
 }
 
-const STREAK_REWARDS = {
-  1: { extraSpins: 5, label: "+5 прокрутов" },
-  2: { extraSpins: 10, label: "+10 прокрутов" },
-  3: { extraSpins: 15, label: "+15 прокрутов" },
-  4: { extraSpins: 20, label: "+20 прокрутов" },
-  5: { extraSpins: 25, label: "+25 прокрутов" },
-  6: { extraSpins: 30, label: "+30 прокрутов" },
-  7: { vipHours: 1, label: "🎁 VIP-статус на 1 час" }
-};
+function getRewardForDay(d) {
+  if (d === 1) return { extraSpins: 5, label: "+5 прокрутов", icon: "⚡️" };
+  if (d === 2) return { extraSpins: 10, label: "+10 прокрутов", icon: "⚡️" };
+  if (d === 3) return { extraSpins: 15, label: "+15 прокрутов", icon: "⚡️" };
+  if (d === 4) return { extraSpins: 20, label: "+20 прокрутов", icon: "⚡️" };
+  if (d === 5) return { extraSpins: 25, label: "+25 прокрутов", icon: "⚡️" };
+  if (d === 6) return { extraSpins: 30, label: "+30 прокрутов", icon: "⚡️" };
+  if (d % 7 === 0) return { vipHours: 1, label: "🎁 VIP-статус на 1 час", icon: "🎁", isVip: true };
+  return { extraSpins: 25, label: "+25 прокрутов", icon: "⚡️" };
+}
 
 function getStreakInfo(userData) {
   const todayDays = Math.floor(Date.now() / 86400000);
@@ -288,7 +289,7 @@ function getStreakInfo(userData) {
     nextDay = currentStreakDay === 0 ? 1 : currentStreakDay;
   } else if (lastDays === todayDays - 1) {
     canClaim = true;
-    nextDay = (currentStreakDay % 7) + 1;
+    nextDay = currentStreakDay + 1;
   } else {
     canClaim = true;
     nextDay = 1;
@@ -624,7 +625,7 @@ async function handleApi(req, res, pathname) {
       }
 
       const dayToClaim = streak.nextDay;
-      const reward = STREAK_REWARDS[dayToClaim];
+      const reward = getRewardForDay(dayToClaim);
 
       u.streakDay = dayToClaim;
       u.lastStreakClaimDays = streak.todayDays;

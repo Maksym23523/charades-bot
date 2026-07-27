@@ -213,15 +213,16 @@ function updateUserCertificateDetails(nameEl, avatarEl) {
   }
 }
 
-const STREAK_DAYS_CONFIG = [
-  { day: 1, icon: "⚡️", reward: "+5 спинов" },
-  { day: 2, icon: "⚡️", reward: "+10 спинов" },
-  { day: 3, icon: "⚡️", reward: "+15 спинов" },
-  { day: 4, icon: "⚡️", reward: "+20 спинов" },
-  { day: 5, icon: "⚡️", reward: "+25 спинов" },
-  { day: 6, icon: "⚡️", reward: "+30 спинов" },
-  { day: 7, icon: "🎁", reward: "1 ч. VIP", isVip: true }
-];
+function getRewardForDay(d) {
+  if (d === 1) return { extraSpins: 5, label: "+5 спинов", icon: "⚡️" };
+  if (d === 2) return { extraSpins: 10, label: "+10 спинов", icon: "⚡️" };
+  if (d === 3) return { extraSpins: 15, label: "+15 спинов", icon: "⚡️" };
+  if (d === 4) return { extraSpins: 20, label: "+20 спинов", icon: "⚡️" };
+  if (d === 5) return { extraSpins: 25, label: "+25 спинов", icon: "⚡️" };
+  if (d === 6) return { extraSpins: 30, label: "+30 спинов", icon: "⚡️" };
+  if (d % 7 === 0) return { vipHours: 1, label: "1 ч. VIP", icon: "🎁", isVip: true };
+  return { extraSpins: 25, label: "+25 спинов", icon: "⚡️" };
+}
 
 function openStreak() {
   renderStreakUI();
@@ -254,43 +255,49 @@ function renderStreakUI() {
 
   streakDaysGrid.innerHTML = "";
 
-  STREAK_DAYS_CONFIG.forEach((cfg) => {
+  const activeDay = streakInfo.claimedToday ? (streakInfo.currentStreakDay || 1) : streakInfo.nextDay;
+  const weekIndex = Math.floor((activeDay - 1) / 7);
+  const startDay = weekIndex * 7 + 1;
+
+  for (let d = startDay; d < startDay + 7; d++) {
+    const reward = getRewardForDay(d);
+
     const card = document.createElement("div");
     card.className = "streak-day-card";
-    if (cfg.isVip) card.classList.add("is-vip-day");
+    if (reward.isVip) card.classList.add("is-vip-day");
 
     const isClaimed = streakInfo.claimedToday
-      ? cfg.day <= streakInfo.nextDay
-      : cfg.day < streakInfo.nextDay;
+      ? d <= streakInfo.currentStreakDay
+      : d < streakInfo.nextDay;
 
-    const isActiveNext = streakInfo.canClaim && cfg.day === streakInfo.nextDay;
+    const isActiveNext = streakInfo.canClaim && d === streakInfo.nextDay;
 
     if (isClaimed) card.classList.add("is-claimed");
     if (isActiveNext) card.classList.add("is-active-next");
 
     const dayNum = document.createElement("div");
     dayNum.className = "streak-day-number";
-    dayNum.textContent = `День ${cfg.day}`;
+    dayNum.textContent = `День ${d}`;
 
     const icon = document.createElement("div");
     icon.className = "streak-day-icon";
-    icon.textContent = isClaimed ? "✅" : cfg.icon;
+    icon.textContent = isClaimed ? "✅" : reward.icon;
 
-    const reward = document.createElement("div");
-    reward.className = "streak-day-reward";
-    reward.textContent = isClaimed ? "Забрано" : cfg.reward;
+    const rewardEl = document.createElement("div");
+    rewardEl.className = "streak-day-reward";
+    rewardEl.textContent = isClaimed ? "Забрано" : reward.label;
 
     card.appendChild(dayNum);
     card.appendChild(icon);
-    card.appendChild(reward);
+    card.appendChild(rewardEl);
     streakDaysGrid.appendChild(card);
-  });
+  }
 
   if (claimStreakActionBtn) {
     if (streakInfo.canClaim) {
-      const nextCfg = STREAK_DAYS_CONFIG.find((c) => c.day === streakInfo.nextDay);
+      const nextReward = getRewardForDay(streakInfo.nextDay);
       claimStreakActionBtn.disabled = false;
-      claimStreakActionBtn.textContent = `🔥 Забрать ${nextCfg ? nextCfg.reward : "награду"}`;
+      claimStreakActionBtn.textContent = `🔥 Забрать ${nextReward.label}`;
     } else {
       claimStreakActionBtn.disabled = true;
       claimStreakActionBtn.textContent = "✅ Получено! Приходите завтра";
