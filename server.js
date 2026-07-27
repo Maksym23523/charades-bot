@@ -558,7 +558,7 @@ async function handleApi(req, res, pathname) {
       payload: `vip_subscription_30days_${userId}_${Date.now()}`,
       currency: "XTR",
       prices: [
-        { label: "VIP Статус", amount: 99 }
+        { label: "VIP Статус", amount: 49 }
       ]
     });
 
