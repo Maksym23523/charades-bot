@@ -65,6 +65,8 @@ function decodeUserData(record) {
   let invitedFriendsCount = 0;
   let extraSpins = 0;
   let blocked = false;
+  let streakDay = 0;
+  let lastStreakClaimDays = 0;
   const actualReadingTimestamps = [];
 
   for (const t of timestamps) {
@@ -76,6 +78,10 @@ function decodeUserData(record) {
       invitedFriendsCount = Math.abs(t) - 20000;
     } else if (t <= -30000 && t > -40000) {
       extraSpins = Math.abs(t) - 30000;
+    } else if (t <= -50000 && t > -60000) {
+      streakDay = Math.abs(t) - 50000;
+    } else if (t <= -60000 && t > -200000) {
+      lastStreakClaimDays = Math.abs(t) - 60000;
     } else if (t > 0) {
       actualReadingTimestamps.push(t);
     }
@@ -86,11 +92,13 @@ function decodeUserData(record) {
     invitedFriendsCount,
     extraSpins,
     blocked,
+    streakDay,
+    lastStreakClaimDays,
     readingTimestamps: actualReadingTimestamps
   };
 }
 
-function encodeUserData(actualReadingTimestamps, telegramSubscribed, invitedFriendsCount, extraSpins, blocked) {
+function encodeUserData(actualReadingTimestamps, telegramSubscribed, invitedFriendsCount, extraSpins, blocked, streakDay = 0, lastStreakClaimDays = 0) {
   const arr = [...actualReadingTimestamps];
   if (telegramSubscribed) {
     arr.push(-10000);
@@ -103,6 +111,12 @@ function encodeUserData(actualReadingTimestamps, telegramSubscribed, invitedFrie
   }
   if (extraSpins > 0) {
     arr.push(-30000 - extraSpins);
+  }
+  if (streakDay > 0) {
+    arr.push(-50000 - streakDay);
+  }
+  if (lastStreakClaimDays > 0) {
+    arr.push(-60000 - lastStreakClaimDays);
   }
   return arr;
 }
@@ -191,7 +205,9 @@ async function getUserData(userId, username) {
     telegramSubscribed: decoded.telegramSubscribed,
     invitedFriendsCount: decoded.invitedFriendsCount,
     extraSpins: decoded.extraSpins,
-    blocked: decoded.blocked
+    blocked: decoded.blocked,
+    streakDay: decoded.streakDay || 0,
+    lastStreakClaimDays: decoded.lastStreakClaimDays || 0
   };
 
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -204,7 +220,9 @@ async function getUserData(userId, username) {
       appUser.telegramSubscribed,
       appUser.invitedFriendsCount,
       appUser.extraSpins,
-      appUser.blocked
+      appUser.blocked,
+      appUser.streakDay,
+      appUser.lastStreakClaimDays
     );
     await callSupabase("users", {
       method: "POST",
@@ -230,7 +248,9 @@ async function updateUserData(userId, username, updater) {
     appUser.telegramSubscribed,
     appUser.invitedFriendsCount,
     appUser.extraSpins,
-    appUser.blocked
+    appUser.blocked,
+    appUser.streakDay,
+    appUser.lastStreakClaimDays
   );
 
   await callSupabase("users", {
@@ -243,6 +263,45 @@ async function updateUserData(userId, username, updater) {
       reading_timestamps: encodedTimestamps
     })
   });
+}
+
+const STREAK_REWARDS = {
+  1: { extraSpins: 5, label: "+5 прокрутов" },
+  2: { extraSpins: 10, label: "+10 прокрутов" },
+  3: { extraSpins: 15, label: "+15 прокрутов" },
+  4: { extraSpins: 20, label: "+20 прокрутов" },
+  5: { extraSpins: 25, label: "+25 прокрутов" },
+  6: { extraSpins: 30, label: "+30 прокрутов" },
+  7: { vipHours: 1, label: "🎁 VIP-статус на 1 час" }
+};
+
+function getStreakInfo(userData) {
+  const todayDays = Math.floor(Date.now() / 86400000);
+  const lastDays = userData.lastStreakClaimDays || 0;
+  const currentStreakDay = userData.streakDay || 0;
+
+  let canClaim = false;
+  let nextDay = 1;
+
+  if (lastDays === todayDays) {
+    canClaim = false;
+    nextDay = currentStreakDay === 0 ? 1 : currentStreakDay;
+  } else if (lastDays === todayDays - 1) {
+    canClaim = true;
+    nextDay = (currentStreakDay % 7) + 1;
+  } else {
+    canClaim = true;
+    nextDay = 1;
+  }
+
+  return {
+    currentStreakDay,
+    lastStreakClaimDays: lastDays,
+    todayDays,
+    canClaim,
+    nextDay,
+    claimedToday: lastDays === todayDays
+  };
 }
 
 function isUserVip(user) {
@@ -538,8 +597,74 @@ async function handleApi(req, res, pathname) {
       extraSpins: userData.extraSpins || 0,
       telegramSubscribed: userData.telegramSubscribed || false,
       invitedFriendsCount: userData.invitedFriendsCount || 0,
+      streakInfo: getStreakInfo(userData),
       botUsername: BOT_USERNAME,
       telegramChannelUsername: process.env.TELEGRAM_CHANNEL_USERNAME || "@charadesgame"
+    });
+  }
+
+  if (req.method === "POST" && pathname === "/api/streak/claim") {
+    const body = await readJson(req);
+    const initDataValidation = validateTelegramInitData(body.initData || "");
+    if (!initDataValidation.valid || !initDataValidation.user) {
+      return sendJson(res, 401, { error: "Unauthorized" });
+    }
+
+    const userId = initDataValidation.user.id;
+    const username = initDataValidation.user.username;
+
+    let claimResult = null;
+    let errorMsg = null;
+
+    await updateUserData(userId, username, (u) => {
+      const streak = getStreakInfo(u);
+      if (!streak.canClaim) {
+        errorMsg = "Вы уже забрали сегодня бонус! Приходите завтра.";
+        return;
+      }
+
+      const dayToClaim = streak.nextDay;
+      const reward = STREAK_REWARDS[dayToClaim];
+
+      u.streakDay = dayToClaim;
+      u.lastStreakClaimDays = streak.todayDays;
+
+      if (reward.extraSpins) {
+        u.extraSpins = (u.extraSpins || 0) + reward.extraSpins;
+      }
+
+      if (reward.vipHours) {
+        const nowMs = Date.now();
+        const currentVipMs = u.vipUntil ? new Date(u.vipUntil).getTime() : 0;
+        const baseMs = Math.max(nowMs, currentVipMs);
+        u.vipUntil = new Date(baseMs + reward.vipHours * 60 * 60 * 1000).toISOString();
+      }
+
+      claimResult = {
+        claimedDay: dayToClaim,
+        rewardLabel: reward.label,
+        reward
+      };
+    });
+
+    if (errorMsg) {
+      return sendJson(res, 400, { error: errorMsg });
+    }
+
+    const updatedUser = await getUserData(userId, username);
+    const updatedStreak = getStreakInfo(updatedUser);
+
+    const cleanUsername = username ? username.toLowerCase().replace(/^@/, "") : "";
+    const hasUnlimitedAccess = VIP_BYPASS_USERNAMES.includes(cleanUsername);
+    const isVip = hasUnlimitedAccess || isUserVip(updatedUser);
+
+    return sendJson(res, 200, {
+      ok: true,
+      claimResult,
+      streakInfo: updatedStreak,
+      extraSpins: updatedUser.extraSpins || 0,
+      vipUntil: updatedUser.vipUntil,
+      isVip
     });
   }
 

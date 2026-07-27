@@ -91,6 +91,13 @@ const celebrationUserName = document.querySelector("#celebrationUserName");
 const celebrationAvatar = document.querySelector("#celebrationAvatar");
 const modalStickerPackBtn = document.querySelector("#modalStickerPackBtn");
 
+const streakButton = document.querySelector("#streakButton");
+const streakBadgeText = document.querySelector("#streakBadgeText");
+const streakPanel = document.querySelector("#streakPanel");
+const closeStreakButton = document.querySelector("#closeStreakButton");
+const streakDaysGrid = document.querySelector("#streakDaysGrid");
+const claimStreakActionBtn = document.querySelector("#claimStreakActionBtn");
+
 const STICKER_PACK_URL = "https://t.me/addstickers/Charades5";
 
 init();
@@ -206,6 +213,128 @@ function updateUserCertificateDetails(nameEl, avatarEl) {
   }
 }
 
+const STREAK_DAYS_CONFIG = [
+  { day: 1, icon: "⚡️", reward: "+5 спинов" },
+  { day: 2, icon: "⚡️", reward: "+10 спинов" },
+  { day: 3, icon: "⚡️", reward: "+15 спинов" },
+  { day: 4, icon: "⚡️", reward: "+20 спинов" },
+  { day: 5, icon: "⚡️", reward: "+25 спинов" },
+  { day: 6, icon: "⚡️", reward: "+30 спинов" },
+  { day: 7, icon: "🎁", reward: "1 ч. VIP", isVip: true }
+];
+
+function openStreak() {
+  renderStreakUI();
+  if (streakPanel) {
+    streakPanel.hidden = false;
+    streakPanel.offsetHeight;
+    streakPanel.classList.add("is-active");
+    document.body.classList.add("has-modal");
+    if (closeStreakButton) closeStreakButton.focus();
+  }
+}
+
+function closeStreak() {
+  if (!streakPanel) return;
+  streakPanel.classList.remove("is-active");
+  document.body.classList.remove("has-modal");
+  if (streakButton) streakButton.focus();
+  setTimeout(() => {
+    if (!streakPanel.classList.contains("is-active")) {
+      streakPanel.hidden = true;
+    }
+  }, 300);
+}
+
+function renderStreakUI() {
+  if (!streakDaysGrid) return;
+  const streakInfo = (state.userStatus && state.userStatus.streakInfo)
+    ? state.userStatus.streakInfo
+    : { currentStreakDay: 0, canClaim: true, nextDay: 1, claimedToday: false };
+
+  streakDaysGrid.innerHTML = "";
+
+  STREAK_DAYS_CONFIG.forEach((cfg) => {
+    const card = document.createElement("div");
+    card.className = "streak-day-card";
+    if (cfg.isVip) card.classList.add("is-vip-day");
+
+    const isClaimed = streakInfo.claimedToday
+      ? cfg.day <= streakInfo.nextDay
+      : cfg.day < streakInfo.nextDay;
+
+    const isActiveNext = streakInfo.canClaim && cfg.day === streakInfo.nextDay;
+
+    if (isClaimed) card.classList.add("is-claimed");
+    if (isActiveNext) card.classList.add("is-active-next");
+
+    const dayNum = document.createElement("div");
+    dayNum.className = "streak-day-number";
+    dayNum.textContent = `День ${cfg.day}`;
+
+    const icon = document.createElement("div");
+    icon.className = "streak-day-icon";
+    icon.textContent = isClaimed ? "✅" : cfg.icon;
+
+    const reward = document.createElement("div");
+    reward.className = "streak-day-reward";
+    reward.textContent = isClaimed ? "Забрано" : cfg.reward;
+
+    card.appendChild(dayNum);
+    card.appendChild(icon);
+    card.appendChild(reward);
+    streakDaysGrid.appendChild(card);
+  });
+
+  if (claimStreakActionBtn) {
+    if (streakInfo.canClaim) {
+      const nextCfg = STREAK_DAYS_CONFIG.find((c) => c.day === streakInfo.nextDay);
+      claimStreakActionBtn.disabled = false;
+      claimStreakActionBtn.textContent = `🔥 Забрать ${nextCfg ? nextCfg.reward : "награду"}`;
+    } else {
+      claimStreakActionBtn.disabled = true;
+      claimStreakActionBtn.textContent = "✅ Получено! Приходите завтра";
+    }
+  }
+
+  if (streakBadgeText) {
+    if (streakInfo.canClaim) {
+      streakBadgeText.textContent = "🔥 Забрать";
+    } else {
+      streakBadgeText.textContent = `🔥 ${streakInfo.currentStreakDay || 0} дн.`;
+    }
+  }
+}
+
+async function claimStreakReward() {
+  if (!claimStreakActionBtn) return;
+  claimStreakActionBtn.disabled = true;
+  claimStreakActionBtn.textContent = "Загрузка...";
+
+  try {
+    const response = await fetch("/api/streak/claim", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: tg ? tg.initData : "" })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      alert(data.error || "Не удалось забрать награду.");
+      renderStreakUI();
+      return;
+    }
+
+    alert(`🎉 Вы получили награду: ${data.claimResult.rewardLabel}!`);
+    await refreshUserStatus();
+    renderStreakUI();
+  } catch (err) {
+    console.error(err);
+    alert("Ошибка сети при получении награды.");
+    renderStreakUI();
+  }
+}
+
 function bindEvents() {
   pickButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -265,6 +394,23 @@ function bindEvents() {
     questReferralBtn.addEventListener("click", shareReferralLink);
   }
 
+  if (streakButton) {
+    streakButton.addEventListener("click", openStreak);
+  }
+  if (closeStreakButton) {
+    closeStreakButton.addEventListener("click", closeStreak);
+  }
+  if (streakPanel) {
+    streakPanel.addEventListener("click", (event) => {
+      if (event.target === streakPanel) {
+        closeStreak();
+      }
+    });
+  }
+  if (claimStreakActionBtn) {
+    claimStreakActionBtn.addEventListener("click", claimStreakReward);
+  }
+
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       if (!profilePanel.hidden) {
@@ -272,6 +418,9 @@ function bindEvents() {
       }
       if (questsPanel && !questsPanel.hidden) {
         closeQuests();
+      }
+      if (streakPanel && !streakPanel.hidden) {
+        closeStreak();
       }
       if (limitOverlay && !limitOverlay.hidden) {
         closeLimitOverlay();
@@ -436,6 +585,7 @@ async function refreshUserStatus() {
         extraSpins: data.extraSpins || 0,
         telegramSubscribed: data.telegramSubscribed || false,
         invitedFriendsCount: data.invitedFriendsCount || 0,
+        streakInfo: data.streakInfo || null,
         botUsername: data.botUsername || "",
         telegramChannelUsername: data.telegramChannelUsername || ""
       };
@@ -444,6 +594,8 @@ async function refreshUserStatus() {
       if (adminBtn) {
         adminBtn.style.display = state.userStatus.isAdmin ? "inline-block" : "none";
       }
+
+      renderStreakUI();
       
       // Update Quests panel values
       if (refCount) {
@@ -472,6 +624,7 @@ async function refreshUserStatus() {
     loadLocalUserStatus();
   }
 
+  renderStreakUI();
   updateLimitUI();
 }
 

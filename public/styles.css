@@ -1580,3 +1580,121 @@ textarea:focus {
 .collector-celebration-card {
   border: 1px solid rgba(255, 215, 0, 0.4) !important;
 }
+
+/* Streak Section Styles */
+.streak-header-button {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.18), rgba(255, 165, 0, 0.28));
+  color: #ff9d00;
+  border: 1px solid rgba(255, 157, 0, 0.4);
+  border-radius: 99px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.streak-header-button:hover {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.28), rgba(255, 165, 0, 0.38));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 157, 0, 0.25);
+}
+
+.streak-banner-card {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.12), rgba(255, 215, 0, 0.05));
+  border: 1px solid rgba(255, 157, 0, 0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.streak-banner-title {
+  font-weight: 800;
+  font-size: 15px;
+  color: #ff9d00;
+  margin-bottom: 4px;
+}
+
+.streak-banner-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.streak-days-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.streak-day-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 4px;
+  text-align: center;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.streak-day-card.is-vip-day {
+  grid-column: span 2;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.18), rgba(214, 169, 79, 0.08));
+  border-color: rgba(255, 215, 0, 0.45);
+}
+
+.streak-day-number {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.streak-day-icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.streak-day-reward {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.streak-day-card.is-claimed {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+  opacity: 0.7;
+}
+
+.streak-day-card.is-claimed .streak-day-reward {
+  color: #10b981;
+}
+
+.streak-day-card.is-active-next {
+  border-color: #ff9d00;
+  box-shadow: 0 0 12px rgba(255, 157, 0, 0.35);
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 157, 0, 0.2); }
+  50% { box-shadow: 0 0 16px rgba(255, 157, 0, 0.5); }
+}
+
+.streak-claim-action-btn {
+  background: linear-gradient(135deg, #ff6b00, #ffa500);
+  box-shadow: 0 4px 16px rgba(255, 107, 0, 0.35);
+}
+
+.streak-claim-action-btn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--muted);
+  box-shadow: none;
+  cursor: not-allowed;
+}
