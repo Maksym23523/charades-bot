@@ -92,7 +92,8 @@ const celebrationAvatar = document.querySelector("#celebrationAvatar");
 const modalStickerPackBtn = document.querySelector("#modalStickerPackBtn");
 
 const streakButton = document.querySelector("#streakButton");
-const streakBadgeText = document.querySelector("#streakBadgeText");
+const streakCountText = document.querySelector("#streakCountText");
+const streakBadgeClaim = document.querySelector("#streakBadgeClaim");
 const streakPanel = document.querySelector("#streakPanel");
 const closeStreakButton = document.querySelector("#closeStreakButton");
 const streakDaysGrid = document.querySelector("#streakDaysGrid");
@@ -304,12 +305,12 @@ function renderStreakUI() {
     }
   }
 
-  if (streakBadgeText) {
-    if (streakInfo.canClaim) {
-      streakBadgeText.textContent = "🔥 Забрать";
-    } else {
-      streakBadgeText.textContent = `🔥 ${streakInfo.currentStreakDay || 0} дн.`;
-    }
+  const count = streakInfo.currentStreakDay || 0;
+  if (streakCountText) {
+    streakCountText.textContent = `${count}🔥`;
+  }
+  if (streakBadgeClaim) {
+    streakBadgeClaim.style.display = streakInfo.canClaim ? "inline-block" : "none";
   }
 }
 
