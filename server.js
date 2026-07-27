@@ -840,6 +840,11 @@ async function handleApi(req, res, pathname) {
       return sendJson(res, 401, { error: "Unauthorized" });
     }
 
+    const completionCount = Number(body.completionCount || 1);
+    if (completionCount >= 2) {
+      return sendJson(res, 200, { ok: true, stickerPackUrl: "https://t.me/addstickers/Charades5" });
+    }
+
     const userId = initDataValidation.user.id;
     const tgUser = initDataValidation.user;
 

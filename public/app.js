@@ -169,14 +169,23 @@ function stopAllAudios() {
 }
 
 async function openStickerPack() {
-  if (claimStickerPackBtn) claimStickerPackBtn.textContent = "⏳ Создаем ваш стикерпак...";
-  if (modalStickerPackBtn) modalStickerPackBtn.textContent = "⏳ Создаем ваш стикерпак...";
+  const cardCounts = state.profile.cardCounts || {};
+  const counts = (state.cards && state.cards.length > 0)
+    ? state.cards.map((card) => Number(cardCounts[card.id] || 0))
+    : [];
+  const completionCount = counts.length > 0 ? Math.min(...counts) : 1;
+
+  if (claimStickerPackBtn) claimStickerPackBtn.textContent = "⏳ Получаем ваш стикерпак...";
+  if (modalStickerPackBtn) modalStickerPackBtn.textContent = "⏳ Получаем ваш стикерпак...";
 
   try {
     const response = await fetch("/api/collector/sticker-pack", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ initData: tg ? tg.initData : "" })
+      body: JSON.stringify({
+        initData: tg ? tg.initData : "",
+        completionCount: completionCount
+      })
     });
 
     const data = await response.json();
