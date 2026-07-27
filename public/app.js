@@ -168,11 +168,35 @@ function stopAllAudios() {
   });
 }
 
-function openStickerPack() {
-  if (tg && typeof tg.openTelegramLink === "function") {
-    tg.openTelegramLink(STICKER_PACK_URL);
-  } else {
-    window.open(STICKER_PACK_URL, "_blank");
+async function openStickerPack() {
+  if (claimStickerPackBtn) claimStickerPackBtn.textContent = "⏳ Создаем ваш стикерпак...";
+  if (modalStickerPackBtn) modalStickerPackBtn.textContent = "⏳ Создаем ваш стикерпак...";
+
+  try {
+    const response = await fetch("/api/collector/sticker-pack", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: tg ? tg.initData : "" })
+    });
+
+    const data = await response.json();
+    const url = (data && data.stickerPackUrl) ? data.stickerPackUrl : STICKER_PACK_URL;
+
+    if (tg && typeof tg.openTelegramLink === "function") {
+      tg.openTelegramLink(url);
+    } else {
+      window.open(url, "_blank");
+    }
+  } catch (err) {
+    console.error("Failed to generate sticker pack:", err);
+    if (tg && typeof tg.openTelegramLink === "function") {
+      tg.openTelegramLink(STICKER_PACK_URL);
+    } else {
+      window.open(STICKER_PACK_URL, "_blank");
+    }
+  } finally {
+    if (claimStickerPackBtn) claimStickerPackBtn.textContent = "🎁 Забрать эксклюзивный стикерпак";
+    if (modalStickerPackBtn) modalStickerPackBtn.textContent = "🎁 Забрать эксклюзивный стикерпак";
   }
 }
 

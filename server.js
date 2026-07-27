@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { createCanvas, loadImage } = require("@napi-rs/canvas");
 
 loadEnvFile();
 
@@ -308,6 +309,169 @@ function getStreakInfo(userData) {
 function isUserVip(user) {
   if (!user.vipUntil) return false;
   return new Date(user.vipUntil) > new Date();
+}
+
+async function callTelegramMultipart(method, fields, fileField) {
+  if (!BOT_TOKEN) {
+    throw new Error("Telegram bot token is not configured");
+  }
+
+  const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substring(2);
+  const chunks = [];
+
+  for (const [key, value] of Object.entries(fields)) {
+    chunks.push(Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="${key}"\r\n\r\n${typeof value === "object" ? JSON.stringify(value) : value}\r\n`
+    ));
+  }
+
+  if (fileField) {
+    const { name, filename, contentType, data } = fileField;
+    chunks.push(Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="${name}"; filename="${filename}"\r\nContent-Type: ${contentType}\r\n\r\n`
+    ));
+    chunks.push(data);
+    chunks.push(Buffer.from("\r\n"));
+  }
+
+  chunks.push(Buffer.from(`--${boundary}--\r\n`));
+  const bodyBuffer = Buffer.concat(chunks);
+
+  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": `multipart/form-data; boundary=${boundary}`
+    },
+    body: bodyBuffer
+  });
+
+  return await res.json();
+}
+
+async function generateMasterStickerBuffer(name, avatarUrl) {
+  const canvas = createCanvas(512, 512);
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0, 0, 512, 512);
+
+  // Outer Glow
+  const outerGrad = ctx.createRadialGradient(256, 256, 180, 256, 256, 250);
+  outerGrad.addColorStop(0, "rgba(255, 215, 0, 0.15)");
+  outerGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = outerGrad;
+  ctx.fillRect(0, 0, 512, 512);
+
+  // Background Card
+  const cardGrad = ctx.createLinearGradient(36, 36, 476, 476);
+  cardGrad.addColorStop(0, "#221c10");
+  cardGrad.addColorStop(0.5, "#16120c");
+  cardGrad.addColorStop(1, "#0d0b08");
+
+  ctx.fillStyle = cardGrad;
+  ctx.beginPath();
+  ctx.roundRect(36, 36, 440, 440, 32);
+  ctx.fill();
+
+  // Gold Border
+  const borderGrad = ctx.createLinearGradient(36, 36, 476, 476);
+  borderGrad.addColorStop(0, "#ffd700");
+  borderGrad.addColorStop(0.5, "#b38728");
+  borderGrad.addColorStop(1, "#fbf5b7");
+  ctx.strokeStyle = borderGrad;
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  // Inner Glow Ring
+  ctx.strokeStyle = "rgba(255, 215, 0, 0.35)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(48, 48, 416, 416, 24);
+  ctx.stroke();
+
+  // Seal Emoji 🏆
+  ctx.font = "46px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("🏆", 256, 92);
+
+  // Eyebrow
+  ctx.font = "bold 13px sans-serif";
+  ctx.fillStyle = "#cca625";
+  ctx.fillText("ОФИЦИАЛЬНЫЙ СЕРТИФИКАТ", 256, 138);
+
+  // Title "ВЕЛИКИЙ МАГИСТР"
+  ctx.font = "bold 21px sans-serif";
+  ctx.fillStyle = "#ffd700";
+  ctx.fillText("ВЕЛИКИЙ МАГИСТР", 256, 168);
+
+  // Subtitle "CHARADES"
+  ctx.font = "900 26px sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText("CHARADES", 256, 202);
+
+  // Gold Line
+  ctx.strokeStyle = "rgba(255, 215, 0, 0.4)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(96, 224);
+  ctx.lineTo(416, 224);
+  ctx.stroke();
+
+  // Avatar Circle
+  const avatarX = 256;
+  const avatarY = 284;
+  const avatarRadius = 38;
+
+  ctx.beginPath();
+  ctx.arc(avatarX, avatarY, avatarRadius + 3, 0, Math.PI * 2);
+  ctx.fillStyle = borderGrad;
+  ctx.fill();
+
+  let avatarLoaded = false;
+  if (avatarUrl) {
+    try {
+      const img = await loadImage(avatarUrl);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarRadius, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(img, avatarX - avatarRadius, avatarY - avatarRadius, avatarRadius * 2, avatarRadius * 2);
+      ctx.restore();
+      avatarLoaded = true;
+    } catch (e) {
+      console.error("Failed to load user avatar for sticker:", e.message);
+    }
+  }
+
+  if (!avatarLoaded) {
+    ctx.beginPath();
+    ctx.arc(avatarX, avatarY, avatarRadius, 0, Math.PI * 2);
+    ctx.fillStyle = "#3a2e18";
+    ctx.fill();
+    ctx.font = "34px sans-serif";
+    ctx.fillStyle = "#ffd700";
+    ctx.fillText("🔮", avatarX, avatarY + 2);
+  }
+
+  // User Name
+  ctx.font = "bold 19px sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(name || "Игрок", 256, 354);
+
+  // Badge "100% КОЛЛЕКЦИЯ"
+  ctx.fillStyle = "rgba(255, 215, 0, 0.15)";
+  ctx.beginPath();
+  ctx.roundRect(136, 386, 240, 34, 17);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255, 215, 0, 0.4)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.font = "bold 13px sans-serif";
+  ctx.fillStyle = "#ffd700";
+  ctx.fillText("100% КОЛЛЕКЦИЯ ОТКРЫТА", 256, 403);
+
+  return canvas.toBuffer("image/png");
 }
 // ----------------------
 
@@ -667,6 +831,74 @@ async function handleApi(req, res, pathname) {
       vipUntil: updatedUser.vipUntil,
       isVip
     });
+  }
+
+  if (req.method === "POST" && pathname === "/api/collector/sticker-pack") {
+    const body = await readJson(req);
+    const initDataValidation = validateTelegramInitData(body.initData || "");
+    if (!initDataValidation.valid || !initDataValidation.user) {
+      return sendJson(res, 401, { error: "Unauthorized" });
+    }
+
+    const userId = initDataValidation.user.id;
+    const tgUser = initDataValidation.user;
+
+    const cleanBotUsername = BOT_USERNAME.replace("@", "").toLowerCase() || "charadesgame_bot";
+    const setName = `master_${userId}_by_${cleanBotUsername}`;
+    const stickerPackUrl = `https://t.me/addstickers/${setName}`;
+
+    try {
+      const checkResult = await callTelegram("getStickerSet", { name: setName });
+      if (checkResult.ok) {
+        return sendJson(res, 200, { ok: true, stickerPackUrl });
+      }
+    } catch (e) {}
+
+    let nameStr = "Игрок";
+    if (tgUser.username) {
+      nameStr = `@${tgUser.username}`;
+    } else {
+      nameStr = `${tgUser.first_name || ""} ${tgUser.last_name || ""}`.trim() || "Игрок";
+    }
+
+    try {
+      const pngBuffer = await generateMasterStickerBuffer(nameStr, tgUser.photo_url || null);
+
+      const stickersPayload = [
+        {
+          emoji_list: ["🏆", "🔮"],
+          format: "static",
+          sticker: "attach://sticker_file"
+        }
+      ];
+
+      const createResult = await callTelegramMultipart(
+        "createNewStickerSet",
+        {
+          user_id: userId,
+          name: setName,
+          title: `CHARADES — ${nameStr}`,
+          stickers: JSON.stringify(stickersPayload),
+          sticker_format: "static"
+        },
+        {
+          name: "sticker_file",
+          filename: "sticker.png",
+          contentType: "image/png",
+          data: pngBuffer
+        }
+      );
+
+      if (createResult.ok) {
+        return sendJson(res, 200, { ok: true, stickerPackUrl });
+      } else {
+        console.error("createNewStickerSet failed:", JSON.stringify(createResult));
+        return sendJson(res, 200, { ok: true, stickerPackUrl: "https://t.me/addstickers/Charades5", fallback: true });
+      }
+    } catch (err) {
+      console.error("Sticker generation error:", err);
+      return sendJson(res, 200, { ok: true, stickerPackUrl: "https://t.me/addstickers/Charades5", fallback: true });
+    }
   }
 
   if (req.method === "POST" && pathname === "/api/telegram/create-invoice") {
