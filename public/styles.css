@@ -1581,20 +1581,64 @@ textarea:focus {
   border: 1px solid rgba(255, 215, 0, 0.4) !important;
 }
 
-/* Streak Section Styles */
-.streak-header-button {
-  background: linear-gradient(135deg, rgba(255, 107, 0, 0.18), rgba(255, 165, 0, 0.28));
-  color: #ff9d00;
-  border: 1px solid rgba(255, 157, 0, 0.4);
+/* Streak Section & Profile Badge Styles */
+.profile-badge-dot {
+  background: #ff6b00;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
   border-radius: 99px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
+  padding: 1px 5px;
+  margin-left: 2px;
+  box-shadow: 0 0 8px rgba(255, 107, 0, 0.6);
+  animation: pulseBadge 1.8s infinite ease-in-out;
+}
+
+.profile-streak-box {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.12), rgba(255, 165, 0, 0.06));
+  border: 1px solid rgba(255, 157, 0, 0.3);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.profile-streak-box:hover {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), rgba(255, 165, 0, 0.12));
+  border-color: rgba(255, 157, 0, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(255, 157, 0, 0.2);
+}
+
+.profile-streak-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-streak-icon {
+  font-size: 24px;
+}
+
+.profile-streak-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.profile-streak-title #streakCountText {
+  color: #ff9d00;
+}
+
+.profile-streak-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 2px 0 0 0;
 }
 
 .streak-count-text {
@@ -1608,7 +1652,7 @@ textarea:focus {
   color: #ffffff;
   font-size: 11px;
   font-weight: 800;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 99px;
   letter-spacing: 0.3px;
   box-shadow: 0 2px 6px rgba(255, 107, 0, 0.4);

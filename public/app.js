@@ -100,6 +100,7 @@ const streakDaysGrid = document.querySelector("#streakDaysGrid");
 const claimStreakActionBtn = document.querySelector("#claimStreakActionBtn");
 
 const shareStoryButton = document.querySelector("#shareStoryButton");
+const profileBadgeDot = document.querySelector("#profileBadgeDot");
 
 const STICKER_PACK_URL = "https://t.me/addstickers/Charades5";
 
@@ -313,6 +314,9 @@ function renderStreakUI() {
   }
   if (streakBadgeClaim) {
     streakBadgeClaim.style.display = streakInfo.canClaim ? "inline-block" : "none";
+  }
+  if (profileBadgeDot) {
+    profileBadgeDot.style.display = streakInfo.canClaim ? "inline-block" : "none";
   }
 }
 
