@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#161419" />
     <title>CHARADES</title>
-    <link rel="stylesheet" href="/styles.css?v=52" />
+    <link rel="stylesheet" href="/styles.css?v=53" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
   <body>
@@ -182,12 +182,17 @@
             <div class="certificate-avatar" id="certificateAvatar">🔮</div>
             <div class="certificate-user-info">
               <span class="certificate-user-name" id="certificateUserName">Игрок</span>
-              <span class="certificate-user-status">100% карт разблокировано</span>
+              <span class="certificate-user-status" id="certificateStatusText">100% карт разблокировано</span>
             </div>
           </div>
-          <button class="upgrade-vip-button collector-sticker-btn" id="claimStickerPackBtn" type="button">
-            🎁 Забрать эксклюзивный стикерпак
-          </button>
+          <div class="certificate-actions-box" style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <button class="upgrade-vip-button collector-sticker-btn" id="claimStickerPackBtn1" type="button">
+              🎁 Забрать персональный стикерпак (1-й сбор)
+            </button>
+            <button class="upgrade-vip-button collector-sticker-btn" id="claimStickerPackBtn2" type="button" style="display: none;">
+              🎁 Забрать стикерпак Charades5 (2-й сбор)
+            </button>
+          </div>
         </div>
 
         <div class="vip-status-container" id="profileVipBox">
@@ -342,11 +347,14 @@
                 <span class="certificate-user-status">100% карт разблокировано</span>
               </div>
             </div>
+          <div class="certificate-actions-box" style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+            <button class="upgrade-vip-button collector-sticker-btn" id="modalStickerPackBtn1" type="button">
+              🎁 Забрать персональный стикерпак (1-й сбор)
+            </button>
+            <button class="upgrade-vip-button collector-sticker-btn" id="modalStickerPackBtn2" type="button" style="display: none;">
+              🎁 Забрать стикерпак Charades5 (2-й сбор)
+            </button>
           </div>
-
-          <button class="upgrade-vip-button collector-sticker-btn" id="modalStickerPackBtn" type="button" style="margin-top: 16px;">
-            🎁 Забрать эксклюзивный стикерпак
-          </button>
         </div>
       </div>
     </section>
@@ -374,6 +382,6 @@
       </article>
     </template>
 
-    <script src="/app.js?v=52"></script>
+    <script src="/app.js?v=53"></script>
   </body>
 </html>

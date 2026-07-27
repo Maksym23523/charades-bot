@@ -168,15 +168,15 @@ function stopAllAudios() {
   });
 }
 
-async function openStickerPack() {
-  const cardCounts = state.profile.cardCounts || {};
-  const counts = (state.cards && state.cards.length > 0)
-    ? state.cards.map((card) => Number(cardCounts[card.id] || 0))
-    : [];
-  const completionCount = counts.length > 0 ? Math.min(...counts) : 1;
+async function openStickerPack(round = 1) {
+  const btn1 = document.querySelector("#claimStickerPackBtn1");
+  const btn2 = document.querySelector("#claimStickerPackBtn2");
+  const mBtn1 = document.querySelector("#modalStickerPackBtn1");
+  const mBtn2 = document.querySelector("#modalStickerPackBtn2");
 
-  if (claimStickerPackBtn) claimStickerPackBtn.textContent = "⏳ Получаем ваш стикерпак...";
-  if (modalStickerPackBtn) modalStickerPackBtn.textContent = "⏳ Получаем ваш стикерпак...";
+  const targetBtn = round === 2 ? (btn2 || mBtn2) : (btn1 || mBtn1);
+  const originalText = targetBtn ? targetBtn.textContent : "";
+  if (targetBtn) targetBtn.textContent = "⏳ Получаем ваш стикерпак...";
 
   try {
     const response = await fetch("/api/collector/sticker-pack", {
@@ -184,7 +184,7 @@ async function openStickerPack() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         initData: tg ? tg.initData : "",
-        completionCount: completionCount
+        completionCount: round
       })
     });
 
@@ -204,8 +204,7 @@ async function openStickerPack() {
       window.open(STICKER_PACK_URL, "_blank");
     }
   } finally {
-    if (claimStickerPackBtn) claimStickerPackBtn.textContent = "🎁 Забрать эксклюзивный стикерпак";
-    if (modalStickerPackBtn) modalStickerPackBtn.textContent = "🎁 Забрать эксклюзивный стикерпак";
+    if (targetBtn) targetBtn.textContent = originalText;
   }
 }
 
@@ -541,12 +540,15 @@ function bindEvents() {
     }
   });
 
-  if (claimStickerPackBtn) {
-    claimStickerPackBtn.addEventListener("click", openStickerPack);
-  }
-  if (modalStickerPackBtn) {
-    modalStickerPackBtn.addEventListener("click", openStickerPack);
-  }
+  const claimBtn1 = document.querySelector("#claimStickerPackBtn1");
+  const claimBtn2 = document.querySelector("#claimStickerPackBtn2");
+  const modalBtn1 = document.querySelector("#modalStickerPackBtn1");
+  const modalBtn2 = document.querySelector("#modalStickerPackBtn2");
+
+  if (claimBtn1) claimBtn1.addEventListener("click", () => openStickerPack(1));
+  if (claimBtn2) claimBtn2.addEventListener("click", () => openStickerPack(2));
+  if (modalBtn1) modalBtn1.addEventListener("click", () => openStickerPack(1));
+  if (modalBtn2) modalBtn2.addEventListener("click", () => openStickerPack(2));
   if (closeCelebrationBtn) {
     closeCelebrationBtn.addEventListener("click", closeCelebrationModal);
   }
@@ -1207,6 +1209,9 @@ function renderProfile() {
   const round1Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 1).length;
   const round2Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 2).length;
 
+  const btn1 = document.querySelector("#claimStickerPackBtn1");
+  const btn2 = document.querySelector("#claimStickerPackBtn2");
+
   if (round1Count < total) {
     const progress = total === 0 ? 0 : Math.round((round1Count / total) * 100);
     collectionCount.textContent = `Сбор 1/2: ${round1Count}/${total}`;
@@ -1220,9 +1225,10 @@ function renderProfile() {
     collectionProgress.style.width = `${progress}%`;
     if (collectorCertificate) {
       collectorCertificate.hidden = false;
-      const statusText = collectorCertificate.querySelector(".certificate-user-status");
+      const statusText = collectorCertificate.querySelector("#certificateStatusText") || collectorCertificate.querySelector(".certificate-user-status");
       if (statusText) statusText.textContent = "1-й сбор коллекции завершен (100%)";
-      if (claimStickerPackBtn) claimStickerPackBtn.textContent = "🎁 Забрать именной стикерпак (1-й сбор)";
+      if (btn1) btn1.style.display = "block";
+      if (btn2) btn2.style.display = "none";
       updateUserCertificateDetails(certificateUserName, certificateAvatar);
     }
   } else {
@@ -1230,9 +1236,10 @@ function renderProfile() {
     collectionProgress.style.width = `100%`;
     if (collectorCertificate) {
       collectorCertificate.hidden = false;
-      const statusText = collectorCertificate.querySelector(".certificate-user-status");
-      if (statusText) statusText.textContent = "2-й сбор коллекции завершен (100%)";
-      if (claimStickerPackBtn) claimStickerPackBtn.textContent = "🎁 Забрать стикерпак Charades5 (2-й сбор)";
+      const statusText = collectorCertificate.querySelector("#certificateStatusText") || collectorCertificate.querySelector(".certificate-user-status");
+      if (statusText) statusText.textContent = "1-й и 2-й сборы завершены (100%)";
+      if (btn1) btn1.style.display = "block";
+      if (btn2) btn2.style.display = "block";
       updateUserCertificateDetails(certificateUserName, certificateAvatar);
     }
   }
