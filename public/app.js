@@ -209,9 +209,23 @@ async function openStickerPack() {
   }
 }
 
-function openCelebrationModal() {
+function openCelebrationModal(round = 1) {
   if (!collectorCelebrationModal) return;
   updateUserCertificateDetails(celebrationUserName, celebrationAvatar);
+
+  const modalTitle = collectorCelebrationModal.querySelector(".certificate-title");
+  const modalStatus = collectorCelebrationModal.querySelector(".certificate-user-status");
+
+  if (round === 2) {
+    if (modalTitle) modalTitle.textContent = "Великий Магистр (2-й сбор)";
+    if (modalStatus) modalStatus.textContent = "2-й сбор коллекции завершен (100%)";
+    if (modalStickerPackBtn) modalStickerPackBtn.textContent = "🎁 Забрать стикерпак Charades5";
+  } else {
+    if (modalTitle) modalTitle.textContent = "Великий Магистр CHARADES";
+    if (modalStatus) modalStatus.textContent = "1-й сбор коллекции завершен (100%)";
+    if (modalStickerPackBtn) modalStickerPackBtn.textContent = "🎁 Забрать именной стикерпак";
+  }
+
   collectorCelebrationModal.hidden = false;
   collectorCelebrationModal.offsetHeight;
   collectorCelebrationModal.classList.add("is-active");
@@ -1090,16 +1104,31 @@ function unlockCards(cards) {
   saveProfile();
   renderProfile();
 
-  // Check if 100% cards unlocked after this draw
+  // Check 2 collection rounds completion
   const totalCardsCount = state.cards.length;
-  const openedCardsCount = state.cards.filter((card) => known.has(card.id)).length;
-  if (totalCardsCount > 0 && openedCardsCount === totalCardsCount) {
-    const celebratedKey = `${state.profileKey}:celebrated-100`;
-    if (!localStorage.getItem(celebratedKey)) {
-      localStorage.setItem(celebratedKey, "true");
-      setTimeout(() => {
-        openCelebrationModal();
-      }, 700);
+  if (totalCardsCount > 0) {
+    const cardCounts = state.profile.cardCounts || {};
+    const round1Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 1).length;
+    const round2Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 2).length;
+
+    if (round1Count === totalCardsCount) {
+      const celKey1 = `${state.profileKey}:celebrated-round1`;
+      if (!localStorage.getItem(celKey1)) {
+        localStorage.setItem(celKey1, "true");
+        setTimeout(() => {
+          openCelebrationModal(1);
+        }, 700);
+      }
+    }
+
+    if (round2Count === totalCardsCount) {
+      const celKey2 = `${state.profileKey}:celebrated-round2`;
+      if (!localStorage.getItem(celKey2)) {
+        localStorage.setItem(celKey2, "true");
+        setTimeout(() => {
+          openCelebrationModal(2);
+        }, 700);
+      }
     }
   }
 
@@ -1173,29 +1202,46 @@ function renderProfile() {
     }
   }
 
-  const discovered = new Set(state.profile.discovered);
   const cardCounts = state.profile.cardCounts || {};
-  const openedCount = state.cards.filter((card) => discovered.has(card.id)).length;
   const total = state.cards.length;
-  const progress = total === 0 ? 0 : Math.round((openedCount / total) * 100);
+  const round1Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 1).length;
+  const round2Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 2).length;
 
-  collectionCount.textContent = `${openedCount}/${total}`;
-  collectionProgress.style.width = `${progress}%`;
-
-  if (openedCount === total && total > 0) {
-    if (collectorCertificate) {
-      collectorCertificate.hidden = false;
-      updateUserCertificateDetails(certificateUserName, certificateAvatar);
-    }
-  } else {
+  if (round1Count < total) {
+    const progress = total === 0 ? 0 : Math.round((round1Count / total) * 100);
+    collectionCount.textContent = `Сбор 1/2: ${round1Count}/${total}`;
+    collectionProgress.style.width = `${progress}%`;
     if (collectorCertificate) {
       collectorCertificate.hidden = true;
     }
+  } else if (round2Count < total) {
+    const progress = total === 0 ? 0 : Math.round((round2Count / total) * 100);
+    collectionCount.textContent = `Сбор 2/2: ${round2Count}/${total}`;
+    collectionProgress.style.width = `${progress}%`;
+    if (collectorCertificate) {
+      collectorCertificate.hidden = false;
+      const statusText = collectorCertificate.querySelector(".certificate-user-status");
+      if (statusText) statusText.textContent = "1-й сбор коллекции завершен (100%)";
+      if (claimStickerPackBtn) claimStickerPackBtn.textContent = "🎁 Забрать именной стикерпак (1-й сбор)";
+      updateUserCertificateDetails(certificateUserName, certificateAvatar);
+    }
+  } else {
+    collectionCount.textContent = `2 сбора завершено (100%)`;
+    collectionProgress.style.width = `100%`;
+    if (collectorCertificate) {
+      collectorCertificate.hidden = false;
+      const statusText = collectorCertificate.querySelector(".certificate-user-status");
+      if (statusText) statusText.textContent = "2-й сбор коллекции завершен (100%)";
+      if (claimStickerPackBtn) claimStickerPackBtn.textContent = "🎁 Забрать стикерпак Charades5 (2-й сбор)";
+      updateUserCertificateDetails(certificateUserName, certificateAvatar);
+    }
   }
+
   profileGrid.innerHTML = "";
 
   state.cards.forEach((card) => {
-    const isOpen = discovered.has(card.id);
+    const count = Number(cardCounts[card.id] || 0);
+    const isOpen = count >= 1;
     const node = profileCardTemplate.content.firstElementChild.cloneNode(true);
     const image = node.querySelector("img");
     const counterElement = node.querySelector(".collection-card-counter");
@@ -1205,10 +1251,8 @@ function renderProfile() {
     node.classList.toggle("is-locked", !isOpen);
 
     if (counterElement) {
-      const count = cardCounts[card.id] || (isOpen ? 1 : 0);
-      counterElement.textContent = `${count} раз`;
+      counterElement.textContent = `${count}/2`;
     }
-
     profileGrid.appendChild(node);
   });
 }
