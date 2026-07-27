@@ -80,6 +80,19 @@ const resultTextBox = document.querySelector("#resultTextBox");
 const resultCardTitle = document.querySelector("#resultCardTitle");
 const resultCardMeaning = document.querySelector("#resultCardMeaning");
 
+const collectorCertificate = document.querySelector("#collectorCertificate");
+const certificateUserName = document.querySelector("#certificateUserName");
+const certificateAvatar = document.querySelector("#certificateAvatar");
+const claimStickerPackBtn = document.querySelector("#claimStickerPackBtn");
+
+const collectorCelebrationModal = document.querySelector("#collectorCelebrationModal");
+const closeCelebrationBtn = document.querySelector("#closeCelebrationBtn");
+const celebrationUserName = document.querySelector("#celebrationUserName");
+const celebrationAvatar = document.querySelector("#celebrationAvatar");
+const modalStickerPackBtn = document.querySelector("#modalStickerPackBtn");
+
+const STICKER_PACK_URL = "https://t.me/addstickers/Charades5";
+
 init();
 
 async function init() {
@@ -139,6 +152,58 @@ function stopAllAudios() {
       audio.currentTime = 0;
     } catch (e) {}
   });
+}
+
+function openStickerPack() {
+  if (tg && typeof tg.openTelegramLink === "function") {
+    tg.openTelegramLink(STICKER_PACK_URL);
+  } else {
+    window.open(STICKER_PACK_URL, "_blank");
+  }
+}
+
+function openCelebrationModal() {
+  if (!collectorCelebrationModal) return;
+  updateUserCertificateDetails(celebrationUserName, celebrationAvatar);
+  collectorCelebrationModal.hidden = false;
+  collectorCelebrationModal.offsetHeight;
+  collectorCelebrationModal.classList.add("is-active");
+  document.body.classList.add("has-modal");
+}
+
+function closeCelebrationModal() {
+  if (!collectorCelebrationModal) return;
+  collectorCelebrationModal.classList.remove("is-active");
+  document.body.classList.remove("has-modal");
+  setTimeout(() => {
+    if (!collectorCelebrationModal.classList.contains("is-active")) {
+      collectorCelebrationModal.hidden = true;
+    }
+  }, 300);
+}
+
+function updateUserCertificateDetails(nameEl, avatarEl) {
+  const tgUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user : null;
+  let nameStr = "Игрок";
+  if (tgUser) {
+    if (tgUser.username) {
+      nameStr = `@${tgUser.username}`;
+    } else {
+      nameStr = `${tgUser.first_name || ""} ${tgUser.last_name || ""}`.trim() || "Игрок";
+    }
+  } else if (state.userStatus && state.userStatus.username) {
+    nameStr = `@${state.userStatus.username}`;
+  }
+  
+  if (nameEl) nameEl.textContent = nameStr;
+
+  if (avatarEl) {
+    if (tgUser && tgUser.photo_url) {
+      avatarEl.innerHTML = `<img src="${tgUser.photo_url}" alt="${nameStr}">`;
+    } else {
+      avatarEl.textContent = "🔮";
+    }
+  }
 }
 
 function bindEvents() {
@@ -211,8 +276,28 @@ function bindEvents() {
       if (limitOverlay && !limitOverlay.hidden) {
         closeLimitOverlay();
       }
+      if (collectorCelebrationModal && !collectorCelebrationModal.hidden) {
+        closeCelebrationModal();
+      }
     }
   });
+
+  if (claimStickerPackBtn) {
+    claimStickerPackBtn.addEventListener("click", openStickerPack);
+  }
+  if (modalStickerPackBtn) {
+    modalStickerPackBtn.addEventListener("click", openStickerPack);
+  }
+  if (closeCelebrationBtn) {
+    closeCelebrationBtn.addEventListener("click", closeCelebrationModal);
+  }
+  if (collectorCelebrationModal) {
+    collectorCelebrationModal.addEventListener("click", (event) => {
+      if (event.target === collectorCelebrationModal) {
+        closeCelebrationModal();
+      }
+    });
+  }
 
   if (closeLimitButton) {
     closeLimitButton.addEventListener("click", closeLimitOverlay);
@@ -738,6 +823,19 @@ function unlockCards(cards) {
   saveProfile();
   renderProfile();
 
+  // Check if 100% cards unlocked after this draw
+  const totalCardsCount = state.cards.length;
+  const openedCardsCount = state.cards.filter((card) => known.has(card.id)).length;
+  if (totalCardsCount > 0 && openedCardsCount === totalCardsCount) {
+    const celebratedKey = `${state.profileKey}:celebrated-100`;
+    if (!localStorage.getItem(celebratedKey)) {
+      localStorage.setItem(celebratedKey, "true");
+      setTimeout(() => {
+        openCelebrationModal();
+      }, 700);
+    }
+  }
+
   // Auto-hide onboarding on first draw
   if (onboardingCard && onboardingCard.style.display !== "none") {
     onboardingCard.style.display = "none";
@@ -816,6 +914,17 @@ function renderProfile() {
 
   collectionCount.textContent = `${openedCount}/${total}`;
   collectionProgress.style.width = `${progress}%`;
+
+  if (openedCount === total && total > 0) {
+    if (collectorCertificate) {
+      collectorCertificate.hidden = false;
+      updateUserCertificateDetails(certificateUserName, certificateAvatar);
+    }
+  } else {
+    if (collectorCertificate) {
+      collectorCertificate.hidden = true;
+    }
+  }
   profileGrid.innerHTML = "";
 
   state.cards.forEach((card) => {

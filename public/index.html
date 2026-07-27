@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#161419" />
     <title>CHARADES</title>
-    <link rel="stylesheet" href="/styles.css?v=38" />
+    <link rel="stylesheet" href="/styles.css?v=39" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
   <body>
@@ -154,6 +154,24 @@
           </div>
         </div>
 
+        <div class="collector-certificate-card" id="collectorCertificate" hidden>
+          <div class="certificate-seal">🏆</div>
+          <div class="certificate-header">
+            <p class="certificate-eyebrow">Официальный Сертификат</p>
+            <h3 class="certificate-title">Великий Магистр CHARADES</h3>
+          </div>
+          <div class="certificate-user-box">
+            <div class="certificate-avatar" id="certificateAvatar">🔮</div>
+            <div class="certificate-user-info">
+              <span class="certificate-user-name" id="certificateUserName">Игрок</span>
+              <span class="certificate-user-status">100% карт разблокировано</span>
+            </div>
+          </div>
+          <button class="upgrade-vip-button collector-sticker-btn" id="claimStickerPackBtn" type="button">
+            🎁 Забрать эксклюзивный стикерпак
+          </button>
+        </div>
+
         <div class="vip-status-container" id="profileVipBox">
           <div class="vip-status-content">
             <span class="vip-status-icon" id="profileVipIcon">👑</span>
@@ -259,6 +277,40 @@
       </div>
     </section>
 
+    <section class="profile-modal" id="collectorCelebrationModal" role="dialog" aria-modal="true" hidden>
+      <div class="profile-card limit-card collector-celebration-card">
+        <header class="profile-head">
+          <div>
+            <p class="eyebrow" style="color: #ffd700;">🎉 Поздравляем!</p>
+            <h2>Вы собрали 100% карт!</h2>
+          </div>
+          <button class="ghost-button" id="closeCelebrationBtn" type="button" aria-label="Закрыть">×</button>
+        </header>
+        <div class="limit-message-body">
+          <p style="margin-bottom: 16px; font-size: 15px;">Вы открыли абсолютно все карты в CHARADES и заслужили почётный титул <strong>«Великий Магистр CHARADES»</strong>!</p>
+          
+          <div class="collector-certificate-card in-modal">
+            <div class="certificate-seal">🏆</div>
+            <div class="certificate-header">
+              <p class="certificate-eyebrow">Сертификат</p>
+              <h3 class="certificate-title">Великий Магистр CHARADES</h3>
+            </div>
+            <div class="certificate-user-box">
+              <div class="certificate-avatar" id="celebrationAvatar">🔮</div>
+              <div class="certificate-user-info">
+                <span class="certificate-user-name" id="celebrationUserName">Игрок</span>
+                <span class="certificate-user-status">100% карт разблокировано</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="upgrade-vip-button collector-sticker-btn" id="modalStickerPackBtn" type="button" style="margin-top: 16px;">
+            🎁 Забрать эксклюзивный стикерпак
+          </button>
+        </div>
+      </div>
+    </section>
+
     <template id="countCardTemplate">
       <span class="count-card">
         <img src="/media/карта.jpg" alt="" />
@@ -282,6 +334,6 @@
       </article>
     </template>
 
-    <script src="/app.js?v=38"></script>
+    <script src="/app.js?v=39"></script>
   </body>
 </html>
