@@ -218,14 +218,14 @@ function updateUserCertificateDetails(nameEl, avatarEl) {
 }
 
 function getRewardForDay(d) {
-  if (d === 1) return { extraSpins: 5, label: "+5 спинов", icon: "⚡️" };
-  if (d === 2) return { extraSpins: 10, label: "+10 спинов", icon: "⚡️" };
-  if (d === 3) return { extraSpins: 15, label: "+15 спинов", icon: "⚡️" };
-  if (d === 4) return { extraSpins: 20, label: "+20 спинов", icon: "⚡️" };
-  if (d === 5) return { extraSpins: 25, label: "+25 спинов", icon: "⚡️" };
-  if (d === 6) return { extraSpins: 30, label: "+30 спинов", icon: "⚡️" };
+  if (d === 1) return { extraSpins: 5, label: "+5 гаданий", icon: "⚡️" };
+  if (d === 2) return { extraSpins: 10, label: "+10 гаданий", icon: "⚡️" };
+  if (d === 3) return { extraSpins: 15, label: "+15 гаданий", icon: "⚡️" };
+  if (d === 4) return { extraSpins: 20, label: "+20 гаданий", icon: "⚡️" };
+  if (d === 5) return { extraSpins: 25, label: "+25 гаданий", icon: "⚡️" };
+  if (d === 6) return { extraSpins: 30, label: "+30 гаданий", icon: "⚡️" };
   if (d % 7 === 0) return { vipHours: 1, label: "1 ч. VIP", icon: "🎁", isVip: true };
-  return { extraSpins: 25, label: "+25 спинов", icon: "⚡️" };
+  return { extraSpins: 25, label: "+25 гаданий", icon: "⚡️" };
 }
 
 function openStreak() {
