@@ -366,7 +366,7 @@ function applyCardSkin(skinId) {
 
 function getCollectionRoundStats() {
   const cardCounts = state.profile.cardCounts || {};
-  const total = state.cards.length || 24;
+  const total = state.cards.length || 26;
   const MAX_ROUNDS = 10;
 
   const roundCounts = [];
@@ -474,7 +474,7 @@ function renderCardSkins() {
 
       if (!isUnlocked) {
         if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("warning");
-        const msg = `🔒 Скин «${skin.name}» откроется после ${skin.requiredRound}-го сбора всех ${stats.total || 24} карт! (Пройдено сборов: ${completedRounds}/${stats.MAX_ROUNDS})`;
+        const msg = `🔒 Скин «${skin.name}» откроется после ${skin.requiredRound}-го сбора всех ${stats.total || 26} карт! (Пройдено сборов: ${completedRounds}/${stats.MAX_ROUNDS})`;
         if (tg && typeof tg.showAlert === "function") {
           tg.showAlert(msg);
         } else {
@@ -1841,7 +1841,7 @@ function renderRewards() {
     card.addEventListener("click", () => {
       if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
       if (!isUnlocked) {
-        const msg = `🔒 «${tier.title}» станет доступно после ${tier.round}-го сбора всех ${total || 24} карт! (Сейчас пройдено сборов: ${stats.completedRounds}/${stats.MAX_ROUNDS})`;
+        const msg = `🔒 «${tier.title}» станет доступно после ${tier.round}-го сбора всех ${total || 26} карт! (Сейчас пройдено сборов: ${stats.completedRounds}/${stats.MAX_ROUNDS})`;
         if (tg && typeof tg.showAlert === "function") {
           tg.showAlert(msg);
         } else {
