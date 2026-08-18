@@ -122,6 +122,22 @@ const rewardsStatusText = document.querySelector("#rewardsStatusText");
 const rewardsStickerBtn1 = document.querySelector("#rewardsStickerBtn1");
 const rewardsStickerBtn2 = document.querySelector("#rewardsStickerBtn2");
 
+const CARD_SKINS = [
+  { id: "default", name: "Классическая", url: "/media/карта.jpg", free: true },
+  { id: "skin_2", name: "Скин 2", url: "/media/карта 2.JPEG", free: false },
+  { id: "skin_3", name: "Скин 3", url: "/media/карта 3.JPEG", free: false },
+  { id: "skin_4", name: "Скин 4", url: "/media/карта 4.JPEG", free: false },
+  { id: "skin_5", name: "Скин 5", url: "/media/карта 5.JPEG", free: false },
+  { id: "skin_6", name: "Скин 6", url: "/media/карта 6.JPEG", free: false },
+  { id: "skin_7", name: "Скин 7", url: "/media/карта 7.PNG", free: false },
+  { id: "skin_8", name: "Скин 8", url: "/media/карта 8.PNG", free: false },
+  { id: "skin_9", name: "Скин 9", url: "/media/карта 9.PNG", free: false }
+];
+
+const cardSkinsSection = document.querySelector("#cardSkinsSection");
+const cardSkinsCarousel = document.querySelector("#cardSkinsCarousel");
+const cardSkinsStatusBadge = document.querySelector("#cardSkinsStatusBadge");
+
 const STICKER_PACK_URL = "https://t.me/addstickers/Charades5";
 
 init();
@@ -129,6 +145,7 @@ init();
 async function init() {
   setupTelegram();
   loadProfile();
+  applyCardSkin(getSelectedSkin().id);
   bindEvents();
   await loadCards();
   await refreshUserStatus();
@@ -281,6 +298,136 @@ function updateUserCertificateDetails(nameEl, avatarEl) {
       avatarEl.textContent = "🔮";
     }
   }
+}
+
+function getSelectedSkin() {
+  const profileKey = state.profileKey || "default_user";
+  const savedId = localStorage.getItem(`${profileKey}:selectedSkin`) || "default";
+  return CARD_SKINS.find((s) => s.id === savedId) || CARD_SKINS[0];
+}
+
+function getSelectedSkinUrl() {
+  return getSelectedSkin().url;
+}
+
+function applyCardSkin(skinId) {
+  const skin = CARD_SKINS.find((s) => s.id === skinId) || CARD_SKINS[0];
+  const profileKey = state.profileKey || "default_user";
+  localStorage.setItem(`${profileKey}:selectedSkin`, skin.id);
+
+  // Apply CSS custom property for idle-card shuffle
+  document.documentElement.style.setProperty("--card-back", `url("${encodeURI(skin.url)}")`);
+
+  // Apply to deckButton image
+  if (deckButton) {
+    const deckImg = deckButton.querySelector("img");
+    if (deckImg) deckImg.src = skin.url;
+  }
+
+  // Apply to countCardTemplate for shuffle animation
+  if (countCardTemplate && countCardTemplate.content) {
+    const countImg = countCardTemplate.content.querySelector("img");
+    if (countImg) countImg.src = skin.url;
+  }
+
+  // Apply to any currently mounted count cards
+  document.querySelectorAll(".count-card img").forEach((img) => {
+    img.src = skin.url;
+  });
+
+  // Update status badge in profile
+  if (cardSkinsStatusBadge) {
+    cardSkinsStatusBadge.textContent = skin.name;
+  }
+
+  renderCardSkins();
+}
+
+function renderCardSkins() {
+  if (!cardSkinsCarousel) return;
+  cardSkinsCarousel.innerHTML = "";
+
+  const selectedSkin = getSelectedSkin();
+  const cardCounts = state.profile.cardCounts || {};
+  const total = state.cards.length;
+  const round1Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 1).length;
+  const isAllCardsUnlocked = total > 0 && round1Count >= total;
+
+  if (cardSkinsStatusBadge) {
+    cardSkinsStatusBadge.textContent = selectedSkin.name;
+  }
+
+  CARD_SKINS.forEach((skin) => {
+    const isUnlocked = skin.free || isAllCardsUnlocked;
+    const isCurrent = skin.id === selectedSkin.id;
+
+    const item = document.createElement("div");
+    item.className = "card-skin-item";
+    if (isCurrent) item.classList.add("is-selected");
+    if (!isUnlocked) item.classList.add("is-locked");
+
+    const preview = document.createElement("div");
+    preview.className = "card-skin-preview";
+
+    const img = document.createElement("img");
+    img.src = skin.url;
+    img.alt = skin.name;
+    preview.appendChild(img);
+
+    if (isCurrent) {
+      const check = document.createElement("div");
+      check.className = "card-skin-check";
+      check.textContent = "✓";
+      preview.appendChild(check);
+    }
+
+    if (!isUnlocked) {
+      const lock = document.createElement("div");
+      lock.className = "card-skin-lock-overlay";
+      lock.textContent = "🔒";
+      preview.appendChild(lock);
+    }
+
+    item.appendChild(preview);
+
+    const name = document.createElement("div");
+    name.className = "card-skin-name";
+    name.textContent = skin.name;
+    item.appendChild(name);
+
+    const badge = document.createElement("div");
+    badge.className = "card-skin-badge";
+    if (isCurrent) {
+      badge.classList.add("badge-active");
+      badge.textContent = "Выбрано";
+    } else if (isUnlocked) {
+      badge.classList.add("badge-select");
+      badge.textContent = "Выбрать";
+    } else {
+      badge.classList.add("badge-locked");
+      badge.textContent = "🔒 100%";
+    }
+    item.appendChild(badge);
+
+    item.addEventListener("click", () => {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+
+      if (!isUnlocked) {
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("warning");
+        if (tg && typeof tg.showAlert === "function") {
+          tg.showAlert(`🔒 ${skin.name} откроется после 100% сбора всех карт (24/24)!`);
+        } else {
+          alert(`🔒 ${skin.name} откроется после 100% сбора всех карт (24/24)!`);
+        }
+        return;
+      }
+
+      applyCardSkin(skin.id);
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+    });
+
+    cardSkinsCarousel.appendChild(item);
+  });
 }
 
 function getRewardForDay(d) {
@@ -1064,6 +1211,8 @@ async function playCountAnimation(pick) {
 
   for (let index = 0; index < pick; index += 1) {
     const node = countCardTemplate.content.firstElementChild.cloneNode(true);
+    const img = node.querySelector("img");
+    if (img) img.src = getSelectedSkinUrl();
     node.style.setProperty("--i", index);
     node.style.setProperty("--x", `${(index - (pick - 1) / 2) * 34}px`);
     node.style.setProperty("--r", `${(index - (pick - 1) / 2) * 8}deg`);
@@ -1430,7 +1579,11 @@ function renderProfile() {
     collectionProgress.style.width = `100%`;
   }
 
+  renderCardSkins();
+
   profileGrid.innerHTML = "";
+
+  const skinUrl = getSelectedSkinUrl();
 
   state.cards.forEach((card) => {
     const count = Number(cardCounts[card.id] || 0);
@@ -1439,7 +1592,7 @@ function renderProfile() {
     const image = node.querySelector("img");
     const counterElement = node.querySelector(".collection-card-counter");
 
-    image.src = isOpen ? card.imageUrl : "/media/карта.jpg";
+    image.src = isOpen ? card.imageUrl : skinUrl;
     image.alt = isOpen ? card.title : "Закрытая карта";
     node.classList.toggle("is-locked", !isOpen);
 
