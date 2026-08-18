@@ -123,15 +123,15 @@ const rewardsStickerBtn1 = document.querySelector("#rewardsStickerBtn1");
 const rewardsStickerBtn2 = document.querySelector("#rewardsStickerBtn2");
 
 const CARD_SKINS = [
-  { id: "default", name: "Классическая", url: "/media/карта.jpg", free: true },
-  { id: "skin_2", name: "Скин 2", url: "/media/карта 2.JPEG", free: false },
-  { id: "skin_3", name: "Скин 3", url: "/media/карта 3.JPEG", free: false },
-  { id: "skin_4", name: "Скин 4", url: "/media/карта 4.JPEG", free: false },
-  { id: "skin_5", name: "Скин 5", url: "/media/карта 5.JPEG", free: false },
-  { id: "skin_6", name: "Скин 6", url: "/media/карта 6.JPEG", free: false },
-  { id: "skin_7", name: "Скин 7", url: "/media/карта 7.PNG", free: false },
-  { id: "skin_8", name: "Скин 8", url: "/media/карта 8.PNG", free: false },
-  { id: "skin_9", name: "Скин 9", url: "/media/карта 9.PNG", free: false }
+  { id: "default", name: "Классическая", url: "/media/карта.jpg", requiredRound: 0 },
+  { id: "skin_2", name: "Красный", url: "/media/карта 2.JPEG", requiredRound: 3 },
+  { id: "skin_3", name: "Зеленый", url: "/media/карта 3.JPEG", requiredRound: 4 },
+  { id: "skin_4", name: "Желтый", url: "/media/карта 4.JPEG", requiredRound: 5 },
+  { id: "skin_5", name: "Серый", url: "/media/карта 5.JPEG", requiredRound: 6 },
+  { id: "skin_6", name: "Черный", url: "/media/карта 6.JPEG", requiredRound: 7 },
+  { id: "skin_7", name: "Серебристый", url: "/media/карта 7.PNG", requiredRound: 8 },
+  { id: "skin_8", name: "Золотой", url: "/media/карта 8.PNG", requiredRound: 9 },
+  { id: "skin_9", name: "Золото про", url: "/media/карта 9.PNG", requiredRound: 10 }
 ];
 
 const cardSkinsSection = document.querySelector("#cardSkinsSection");
@@ -248,15 +248,26 @@ function openCelebrationModal(round = 1) {
 
   const modalTitle = collectorCelebrationModal.querySelector(".certificate-title");
   const modalStatus = collectorCelebrationModal.querySelector(".certificate-user-status");
+  const modalBtn1 = document.querySelector("#modalStickerPackBtn1");
+  const modalBtn2 = document.querySelector("#modalStickerPackBtn2");
 
-  if (round === 2) {
-    if (modalTitle) modalTitle.textContent = "Великий Магистр (2-й сбор)";
-    if (modalStatus) modalStatus.textContent = "2-й сбор коллекции завершен (100%)";
-    if (modalStickerPackBtn) modalStickerPackBtn.textContent = "🎁 Забрать стикерпак Charades5";
-  } else {
+  if (round === 1) {
     if (modalTitle) modalTitle.textContent = "Великий Магистр CHARADES";
     if (modalStatus) modalStatus.textContent = "1-й сбор коллекции завершен (100%)";
-    if (modalStickerPackBtn) modalStickerPackBtn.textContent = "🎁 Забрать именной стикерпак";
+    if (modalBtn1) modalBtn1.style.display = "block";
+    if (modalBtn2) modalBtn2.style.display = "none";
+  } else if (round === 2) {
+    if (modalTitle) modalTitle.textContent = "Великий Магистр (2-й сбор)";
+    if (modalStatus) modalStatus.textContent = "2-й сбор коллекции завершен (100%)";
+    if (modalBtn1) modalBtn1.style.display = "block";
+    if (modalBtn2) modalBtn2.style.display = "block";
+  } else {
+    const skin = CARD_SKINS.find((s) => s.requiredRound === round);
+    const skinName = skin ? skin.name : `Скин ${round}`;
+    if (modalTitle) modalTitle.textContent = `Разблокирован скин «${skinName}»!`;
+    if (modalStatus) modalStatus.textContent = `${round}-й сбор коллекции завершен (100%)`;
+    if (modalBtn1) modalBtn1.style.display = "none";
+    if (modalBtn2) modalBtn2.style.display = "none";
   }
 
   collectorCelebrationModal.hidden = false;
@@ -343,22 +354,61 @@ function applyCardSkin(skinId) {
   renderCardSkins();
 }
 
+function getCollectionRoundStats() {
+  const cardCounts = state.profile.cardCounts || {};
+  const total = state.cards.length || 24;
+  const MAX_ROUNDS = 10;
+
+  const roundCounts = [];
+  for (let r = 1; r <= MAX_ROUNDS; r++) {
+    const count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= r).length;
+    roundCounts.push({
+      round: r,
+      count: count,
+      isCompleted: total > 0 && count >= total
+    });
+  }
+
+  let currentRound = 1;
+  let currentRoundCount = roundCounts[0] ? roundCounts[0].count : 0;
+  for (let i = 0; i < MAX_ROUNDS; i++) {
+    if (!roundCounts[i].isCompleted) {
+      currentRound = i + 1;
+      currentRoundCount = roundCounts[i].count;
+      break;
+    }
+    if (i === MAX_ROUNDS - 1) {
+      currentRound = MAX_ROUNDS;
+      currentRoundCount = total;
+    }
+  }
+
+  const completedRounds = roundCounts.filter((rc) => rc.isCompleted).length;
+
+  return {
+    total,
+    MAX_ROUNDS,
+    roundCounts,
+    currentRound,
+    currentRoundCount,
+    completedRounds
+  };
+}
+
 function renderCardSkins() {
   if (!cardSkinsCarousel) return;
   cardSkinsCarousel.innerHTML = "";
 
   const selectedSkin = getSelectedSkin();
-  const cardCounts = state.profile.cardCounts || {};
-  const total = state.cards.length;
-  const round1Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 1).length;
-  const isAllCardsUnlocked = total > 0 && round1Count >= total;
+  const stats = getCollectionRoundStats();
+  const completedRounds = stats.completedRounds;
 
   if (cardSkinsStatusBadge) {
     cardSkinsStatusBadge.textContent = selectedSkin.name;
   }
 
   CARD_SKINS.forEach((skin) => {
-    const isUnlocked = skin.free || isAllCardsUnlocked;
+    const isUnlocked = skin.requiredRound === 0 || completedRounds >= skin.requiredRound;
     const isCurrent = skin.id === selectedSkin.id;
 
     const item = document.createElement("div");
@@ -405,7 +455,7 @@ function renderCardSkins() {
       badge.textContent = "Выбрать";
     } else {
       badge.classList.add("badge-locked");
-      badge.textContent = "🔒 100%";
+      badge.textContent = `🔒 Сбор ${skin.requiredRound}`;
     }
     item.appendChild(badge);
 
@@ -414,10 +464,11 @@ function renderCardSkins() {
 
       if (!isUnlocked) {
         if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("warning");
+        const msg = `🔒 Скин «${skin.name}» откроется после ${skin.requiredRound}-го сбора всех ${stats.total || 24} карт! (Пройдено сборов: ${completedRounds}/${stats.MAX_ROUNDS})`;
         if (tg && typeof tg.showAlert === "function") {
-          tg.showAlert(`🔒 ${skin.name} откроется после 100% сбора всех карт (24/24)!`);
+          tg.showAlert(msg);
         } else {
-          alert(`🔒 ${skin.name} откроется после 100% сбора всех карт (24/24)!`);
+          alert(msg);
         }
         return;
       }
@@ -1377,30 +1428,21 @@ function unlockCards(cards) {
   saveProfile();
   renderProfile();
 
-  // Check 2 collection rounds completion
+  // Check multi-round collection completion
   const totalCardsCount = state.cards.length;
   if (totalCardsCount > 0) {
-    const cardCounts = state.profile.cardCounts || {};
-    const round1Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 1).length;
-    const round2Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 2).length;
-
-    if (round1Count === totalCardsCount) {
-      const celKey1 = `${state.profileKey}:celebrated-round1`;
-      if (!localStorage.getItem(celKey1)) {
-        localStorage.setItem(celKey1, "true");
-        setTimeout(() => {
-          openCelebrationModal(1);
-        }, 700);
-      }
-    }
-
-    if (round2Count === totalCardsCount) {
-      const celKey2 = `${state.profileKey}:celebrated-round2`;
-      if (!localStorage.getItem(celKey2)) {
-        localStorage.setItem(celKey2, "true");
-        setTimeout(() => {
-          openCelebrationModal(2);
-        }, 700);
+    const stats = getCollectionRoundStats();
+    for (let r = 1; r <= stats.MAX_ROUNDS; r++) {
+      const isCompleted = stats.roundCounts[r - 1] && stats.roundCounts[r - 1].isCompleted;
+      if (isCompleted) {
+        const celKey = `${state.profileKey}:celebrated-round${r}`;
+        if (!localStorage.getItem(celKey)) {
+          localStorage.setItem(celKey, "true");
+          setTimeout(() => {
+            openCelebrationModal(r);
+          }, 700);
+          break;
+        }
       }
     }
   }
@@ -1467,10 +1509,10 @@ function renderRewards() {
   if (!rewardsCertificateCard) return;
   updateUserCertificateDetails(rewardsUserName, rewardsAvatar);
 
-  const cardCounts = state.profile.cardCounts || {};
-  const total = state.cards.length;
-  const round1Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 1).length;
-  const round2Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 2).length;
+  const stats = getCollectionRoundStats();
+  const total = stats.total;
+  const round1Count = stats.roundCounts[0] ? stats.roundCounts[0].count : 0;
+  const round2Count = stats.roundCounts[1] ? stats.roundCounts[1].count : 0;
 
   if (round1Count < total) {
     if (rewardsStatusText) {
@@ -1504,7 +1546,7 @@ function renderRewards() {
     }
   } else {
     if (rewardsStatusText) {
-      rewardsStatusText.textContent = "1-й и 2-й сборы завершены (100%)";
+      rewardsStatusText.textContent = `Завершено сборов: ${stats.completedRounds}/${stats.MAX_ROUNDS}`;
     }
     if (rewardsStickerBtn1) {
       rewardsStickerBtn1.disabled = false;
@@ -1562,21 +1604,16 @@ function renderProfile() {
   }
 
   const cardCounts = state.profile.cardCounts || {};
-  const total = state.cards.length;
-  const round1Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 1).length;
-  const round2Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 2).length;
+  const stats = getCollectionRoundStats();
+  const total = stats.total;
 
-  if (round1Count < total) {
-    const progress = total === 0 ? 0 : Math.round((round1Count / total) * 100);
-    collectionCount.textContent = `Сбор 1/2: ${round1Count}/${total}`;
-    collectionProgress.style.width = `${progress}%`;
-  } else if (round2Count < total) {
-    const progress = total === 0 ? 0 : Math.round((round2Count / total) * 100);
-    collectionCount.textContent = `Сбор 2/2: ${round2Count}/${total}`;
-    collectionProgress.style.width = `${progress}%`;
-  } else {
-    collectionCount.textContent = `2 сбора завершено (100%)`;
+  if (stats.completedRounds >= stats.MAX_ROUNDS) {
+    collectionCount.textContent = `Все ${stats.MAX_ROUNDS} сборов завершено (100%)`;
     collectionProgress.style.width = `100%`;
+  } else {
+    const progress = total === 0 ? 0 : Math.round((stats.currentRoundCount / total) * 100);
+    collectionCount.textContent = `Сбор ${stats.currentRound}/${stats.MAX_ROUNDS}: ${stats.currentRoundCount}/${total}`;
+    collectionProgress.style.width = `${progress}%`;
   }
 
   renderCardSkins();
@@ -1597,7 +1634,7 @@ function renderProfile() {
     node.classList.toggle("is-locked", !isOpen);
 
     if (counterElement) {
-      counterElement.textContent = `${count}/2`;
+      counterElement.textContent = `${count}/${stats.MAX_ROUNDS}`;
     }
     profileGrid.appendChild(node);
   });
