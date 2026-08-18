@@ -1924,7 +1924,7 @@ function renderProfile() {
     node.classList.toggle("is-locked", !isOpen);
 
     if (counterElement) {
-      counterElement.textContent = `${count}/${stats.MAX_ROUNDS}`;
+      counterElement.textContent = `${count}`;
     }
     profileGrid.appendChild(node);
   });
