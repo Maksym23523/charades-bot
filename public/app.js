@@ -105,6 +105,23 @@ const claimStreakActionBtn = document.querySelector("#claimStreakActionBtn");
 const shareStoryButton = document.querySelector("#shareStoryButton");
 const profileBadgeDot = document.querySelector("#profileBadgeDot");
 
+const bottomNav = document.querySelector("#bottomNav");
+const tabStreak = document.querySelector("#tabStreak");
+const tabQuests = document.querySelector("#tabQuests");
+const tabMain = document.querySelector("#tabMain");
+const tabRewards = document.querySelector("#tabRewards");
+const tabProfile = document.querySelector("#tabProfile");
+const navStreakBadge = document.querySelector("#navStreakBadge");
+
+const rewardsPanel = document.querySelector("#rewardsPanel");
+const closeRewardsButton = document.querySelector("#closeRewardsButton");
+const rewardsCertificateCard = document.querySelector("#rewardsCertificateCard");
+const rewardsAvatar = document.querySelector("#rewardsAvatar");
+const rewardsUserName = document.querySelector("#rewardsUserName");
+const rewardsStatusText = document.querySelector("#rewardsStatusText");
+const rewardsStickerBtn1 = document.querySelector("#rewardsStickerBtn1");
+const rewardsStickerBtn2 = document.querySelector("#rewardsStickerBtn2");
+
 const STICKER_PACK_URL = "https://t.me/addstickers/Charades5";
 
 init();
@@ -169,8 +186,8 @@ function stopAllAudios() {
 }
 
 async function openStickerPack(round = 1) {
-  const btn1 = document.querySelector("#claimStickerPackBtn1");
-  const btn2 = document.querySelector("#claimStickerPackBtn2");
+  const btn1 = rewardsStickerBtn1 || document.querySelector("#claimStickerPackBtn1");
+  const btn2 = rewardsStickerBtn2 || document.querySelector("#claimStickerPackBtn2");
   const mBtn1 = document.querySelector("#modalStickerPackBtn1");
   const mBtn2 = document.querySelector("#modalStickerPackBtn2");
 
@@ -277,7 +294,27 @@ function getRewardForDay(d) {
   return { extraSpins: 25, label: "+25 гаданий", icon: "⚡️" };
 }
 
+function setActiveTab(tabId) {
+  const tabs = [tabStreak, tabQuests, tabMain, tabRewards, tabProfile];
+  tabs.forEach((tab) => {
+    if (tab) {
+      tab.classList.toggle("is-active", tab.id === tabId);
+    }
+  });
+}
+
+function closeOtherModals(exceptPanel) {
+  const allPanels = [profilePanel, questsPanel, streakPanel, rewardsPanel, adminPanel, collectorCelebrationModal, limitOverlay];
+  allPanels.forEach((p) => {
+    if (p && p !== exceptPanel && !p.hidden) {
+      p.classList.remove("is-active");
+      p.hidden = true;
+    }
+  });
+}
+
 function openStreak() {
+  closeOtherModals(streakPanel);
   renderStreakUI();
   if (streakPanel) {
     streakPanel.hidden = false;
@@ -286,18 +323,19 @@ function openStreak() {
     document.body.classList.add("has-modal");
     if (closeStreakButton) closeStreakButton.focus();
   }
+  setActiveTab("tabStreak");
 }
 
 function closeStreak() {
   if (!streakPanel) return;
   streakPanel.classList.remove("is-active");
   document.body.classList.remove("has-modal");
-  if (streakButton) streakButton.focus();
   setTimeout(() => {
     if (!streakPanel.classList.contains("is-active")) {
       streakPanel.hidden = true;
     }
   }, 300);
+  setActiveTab("tabMain");
 }
 
 function renderStreakUI() {
@@ -366,6 +404,9 @@ function renderStreakUI() {
   }
   if (profileBadgeDot) {
     profileBadgeDot.style.display = streakInfo.canClaim ? "inline-block" : "none";
+  }
+  if (navStreakBadge) {
+    navStreakBadge.style.display = streakInfo.canClaim ? "block" : "none";
   }
 }
 
@@ -475,13 +516,91 @@ function bindEvents() {
   if (shareStoryButton) {
     shareStoryButton.addEventListener("click", shareToStory);
   }
-  profileButton.addEventListener("click", openProfile);
-  closeProfileButton.addEventListener("click", closeProfile);
-  profilePanel.addEventListener("click", (event) => {
-    if (event.target === profilePanel) {
-      closeProfile();
-    }
-  });
+  // Bottom Navigation tabs
+  if (tabStreak) {
+    tabStreak.addEventListener("click", () => {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+      if (streakPanel && !streakPanel.hidden && streakPanel.classList.contains("is-active")) {
+        closeStreak();
+      } else {
+        openStreak();
+      }
+    });
+  }
+
+  if (tabQuests) {
+    tabQuests.addEventListener("click", () => {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+      if (questsPanel && !questsPanel.hidden && questsPanel.classList.contains("is-active")) {
+        closeQuests();
+      } else {
+        openQuests();
+      }
+    });
+  }
+
+  if (tabMain) {
+    tabMain.addEventListener("click", () => {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+      closeOtherModals(null);
+      document.body.classList.remove("has-modal");
+      setActiveTab("tabMain");
+    });
+  }
+
+  if (tabRewards) {
+    tabRewards.addEventListener("click", () => {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+      if (rewardsPanel && !rewardsPanel.hidden && rewardsPanel.classList.contains("is-active")) {
+        closeRewards();
+      } else {
+        openRewards();
+      }
+    });
+  }
+
+  if (tabProfile) {
+    tabProfile.addEventListener("click", () => {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+      if (profilePanel && !profilePanel.hidden && profilePanel.classList.contains("is-active")) {
+        closeProfile();
+      } else {
+        openProfile();
+      }
+    });
+  }
+
+  if (closeRewardsButton) {
+    closeRewardsButton.addEventListener("click", closeRewards);
+  }
+  if (rewardsPanel) {
+    rewardsPanel.addEventListener("click", (event) => {
+      if (event.target === rewardsPanel) {
+        closeRewards();
+      }
+    });
+  }
+
+  if (rewardsStickerBtn1) {
+    rewardsStickerBtn1.addEventListener("click", () => openStickerPack(1));
+  }
+  if (rewardsStickerBtn2) {
+    rewardsStickerBtn2.addEventListener("click", () => openStickerPack(2));
+  }
+
+  if (profileButton) {
+    profileButton.addEventListener("click", openProfile);
+  }
+  if (closeProfileButton) {
+    closeProfileButton.addEventListener("click", closeProfile);
+  }
+  if (profilePanel) {
+    profilePanel.addEventListener("click", (event) => {
+      if (event.target === profilePanel) {
+        closeProfile();
+      }
+    });
+  }
 
   if (questsButton) {
     questsButton.addEventListener("click", openQuests);
@@ -522,7 +641,7 @@ function bindEvents() {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      if (!profilePanel.hidden) {
+      if (profilePanel && !profilePanel.hidden) {
         closeProfile();
       }
       if (questsPanel && !questsPanel.hidden) {
@@ -530,6 +649,9 @@ function bindEvents() {
       }
       if (streakPanel && !streakPanel.hidden) {
         closeStreak();
+      }
+      if (rewardsPanel && !rewardsPanel.hidden) {
+        closeRewards();
       }
       if (limitOverlay && !limitOverlay.hidden) {
         closeLimitOverlay();
@@ -1146,23 +1268,109 @@ function normalizeIds(values) {
 }
 
 function openProfile() {
+  closeOtherModals(profilePanel);
   renderProfile();
   profilePanel.hidden = false;
   profilePanel.offsetHeight;
   profilePanel.classList.add("is-active");
   document.body.classList.add("has-modal");
   closeProfileButton.focus();
+  setActiveTab("tabProfile");
 }
 
 function closeProfile() {
   profilePanel.classList.remove("is-active");
   document.body.classList.remove("has-modal");
-  profileButton.focus();
   setTimeout(() => {
     if (!profilePanel.classList.contains("is-active")) {
       profilePanel.hidden = true;
     }
   }, 300);
+  setActiveTab("tabMain");
+}
+
+function openRewards() {
+  closeOtherModals(rewardsPanel);
+  renderRewards();
+  if (rewardsPanel) {
+    rewardsPanel.hidden = false;
+    rewardsPanel.offsetHeight;
+    rewardsPanel.classList.add("is-active");
+    document.body.classList.add("has-modal");
+    if (closeRewardsButton) closeRewardsButton.focus();
+  }
+  setActiveTab("tabRewards");
+}
+
+function closeRewards() {
+  if (!rewardsPanel) return;
+  rewardsPanel.classList.remove("is-active");
+  document.body.classList.remove("has-modal");
+  setTimeout(() => {
+    if (!rewardsPanel.classList.contains("is-active")) {
+      rewardsPanel.hidden = true;
+    }
+  }, 300);
+  setActiveTab("tabMain");
+}
+
+function renderRewards() {
+  if (!rewardsCertificateCard) return;
+  updateUserCertificateDetails(rewardsUserName, rewardsAvatar);
+
+  const cardCounts = state.profile.cardCounts || {};
+  const total = state.cards.length;
+  const round1Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 1).length;
+  const round2Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 2).length;
+
+  if (round1Count < total) {
+    if (rewardsStatusText) {
+      rewardsStatusText.textContent = `Собрано ${round1Count}/${total} карт (1-й сбор)`;
+    }
+    if (rewardsStickerBtn1) {
+      rewardsStickerBtn1.disabled = true;
+      rewardsStickerBtn1.textContent = `🔒 Откройте ещё ${total - round1Count} карт для 1-го сбора`;
+      rewardsStickerBtn1.style.opacity = "0.6";
+      rewardsStickerBtn1.style.cursor = "not-allowed";
+    }
+    if (rewardsStickerBtn2) {
+      rewardsStickerBtn2.style.display = "none";
+    }
+  } else if (round2Count < total) {
+    if (rewardsStatusText) {
+      rewardsStatusText.textContent = "1-й сбор коллекции завершен (100%)";
+    }
+    if (rewardsStickerBtn1) {
+      rewardsStickerBtn1.disabled = false;
+      rewardsStickerBtn1.textContent = "🎁 Забрать персональный стикерпак (1-й сбор)";
+      rewardsStickerBtn1.style.opacity = "1";
+      rewardsStickerBtn1.style.cursor = "pointer";
+    }
+    if (rewardsStickerBtn2) {
+      rewardsStickerBtn2.style.display = "block";
+      rewardsStickerBtn2.disabled = true;
+      rewardsStickerBtn2.textContent = `🔒 2-й сбор: ${round2Count}/${total} карт`;
+      rewardsStickerBtn2.style.opacity = "0.6";
+      rewardsStickerBtn2.style.cursor = "not-allowed";
+    }
+  } else {
+    if (rewardsStatusText) {
+      rewardsStatusText.textContent = "1-й и 2-й сборы завершены (100%)";
+    }
+    if (rewardsStickerBtn1) {
+      rewardsStickerBtn1.disabled = false;
+      rewardsStickerBtn1.textContent = "🎁 Забрать персональный стикерпак (1-й сбор)";
+      rewardsStickerBtn1.style.opacity = "1";
+      rewardsStickerBtn1.style.cursor = "pointer";
+    }
+    if (rewardsStickerBtn2) {
+      rewardsStickerBtn2.style.display = "block";
+      rewardsStickerBtn2.disabled = false;
+      rewardsStickerBtn2.textContent = "🎁 Забрать стикерпак Charades5 (2-й сбор)";
+      rewardsStickerBtn2.style.opacity = "1";
+      rewardsStickerBtn2.style.cursor = "pointer";
+    }
+  }
 }
 
 function renderProfile() {
@@ -1209,39 +1417,17 @@ function renderProfile() {
   const round1Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 1).length;
   const round2Count = state.cards.filter((c) => Number(cardCounts[c.id] || 0) >= 2).length;
 
-  const btn1 = document.querySelector("#claimStickerPackBtn1");
-  const btn2 = document.querySelector("#claimStickerPackBtn2");
-
   if (round1Count < total) {
     const progress = total === 0 ? 0 : Math.round((round1Count / total) * 100);
     collectionCount.textContent = `Сбор 1/2: ${round1Count}/${total}`;
     collectionProgress.style.width = `${progress}%`;
-    if (collectorCertificate) {
-      collectorCertificate.hidden = true;
-    }
   } else if (round2Count < total) {
     const progress = total === 0 ? 0 : Math.round((round2Count / total) * 100);
     collectionCount.textContent = `Сбор 2/2: ${round2Count}/${total}`;
     collectionProgress.style.width = `${progress}%`;
-    if (collectorCertificate) {
-      collectorCertificate.hidden = false;
-      const statusText = collectorCertificate.querySelector("#certificateStatusText") || collectorCertificate.querySelector(".certificate-user-status");
-      if (statusText) statusText.textContent = "1-й сбор коллекции завершен (100%)";
-      if (btn1) btn1.style.display = "block";
-      if (btn2) btn2.style.display = "none";
-      updateUserCertificateDetails(certificateUserName, certificateAvatar);
-    }
   } else {
     collectionCount.textContent = `2 сбора завершено (100%)`;
     collectionProgress.style.width = `100%`;
-    if (collectorCertificate) {
-      collectorCertificate.hidden = false;
-      const statusText = collectorCertificate.querySelector("#certificateStatusText") || collectorCertificate.querySelector(".certificate-user-status");
-      if (statusText) statusText.textContent = "1-й и 2-й сборы завершены (100%)";
-      if (btn1) btn1.style.display = "block";
-      if (btn2) btn2.style.display = "block";
-      updateUserCertificateDetails(certificateUserName, certificateAvatar);
-    }
   }
 
   profileGrid.innerHTML = "";
@@ -1284,6 +1470,7 @@ function wait(ms) {
 }
 
 function openQuests() {
+  closeOtherModals(questsPanel);
   questsPanel.hidden = false;
   questsPanel.offsetHeight;
   questsPanel.classList.add("is-active");
@@ -1292,19 +1479,18 @@ function openQuests() {
     closeQuestsButton.focus();
   }
   refreshUserStatus();
+  setActiveTab("tabQuests");
 }
 
 function closeQuests() {
   questsPanel.classList.remove("is-active");
   document.body.classList.remove("has-modal");
-  if (questsButton) {
-    questsButton.focus();
-  }
   setTimeout(() => {
     if (!questsPanel.classList.contains("is-active")) {
       questsPanel.hidden = true;
     }
   }, 300);
+  setActiveTab("tabMain");
 }
 
 function closeLimitOverlay() {

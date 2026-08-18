@@ -48,7 +48,7 @@ button {
   width: min(1040px, 100%);
   min-height: 100vh;
   margin: 0 auto;
-  padding: calc(18px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom));
+  padding: calc(18px + env(safe-area-inset-top)) 16px calc(80px + env(safe-area-inset-bottom));
 }
 
 .topbar {
@@ -1805,4 +1805,151 @@ textarea:focus {
 
 .story-mark {
   font-size: 18px;
+}
+
+/* Bottom Navigation Bar Styles */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: calc(64px + env(safe-area-inset-bottom));
+  padding: 6px 6px env(safe-area-inset-bottom);
+  background: rgba(22, 19, 25, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  padding: 6px 2px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-item:active {
+  transform: scale(0.92);
+}
+
+.nav-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.nav-item.is-main .nav-icon-wrap {
+  font-size: 23px;
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-item.is-active {
+  color: #ffd700;
+}
+
+.nav-item.is-active .nav-icon-wrap {
+  transform: translateY(-2px) scale(1.12);
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.55));
+}
+
+.nav-item.is-active .nav-label {
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.35);
+}
+
+.nav-badge {
+  position: absolute;
+  top: -2px;
+  right: -6px;
+  width: 8px;
+  height: 8px;
+  background: #ff5500;
+  border-radius: 99px;
+  box-shadow: 0 0 6px rgba(255, 85, 0, 0.9);
+  animation: pulseBadge 1.8s infinite ease-in-out;
+}
+
+/* Rewards Panel Custom Styles */
+.rewards-overview-card {
+  background: linear-gradient(135deg, rgba(214, 169, 79, 0.12), rgba(90, 168, 147, 0.08));
+  border: 1px solid rgba(214, 169, 79, 0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.rewards-overview-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.rewards-info-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.reward-tier-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.reward-tier-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.reward-tier-content strong {
+  display: block;
+  font-size: 14px;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.reward-tier-content p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.35;
 }

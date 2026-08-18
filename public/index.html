@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#161419" />
     <title>CHARADES</title>
-    <link rel="stylesheet" href="/styles.css?v=53" />
+    <link rel="stylesheet" href="/styles.css?v=54" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
   <body>
@@ -19,15 +19,6 @@
           <span class="vip-badge" id="vipBadge" style="display: none;">VIP</span>
           <button class="buy-vip-header-button" id="buyVipHeaderButton" type="button" style="display: none;">⭐️ VIP</button>
           <button class="admin-header-button" id="adminHeaderButton" type="button" style="display: none;">🛠 Админ</button>
-          <button class="quests-button" id="questsButton" type="button">
-            <span class="quests-mark" aria-hidden="true">🎁</span>
-            <span>Квесты</span>
-          </button>
-          <button class="profile-button" id="profileButton" type="button">
-            <span class="profile-mark" aria-hidden="true"></span>
-            <span>Профиль</span>
-            <span class="profile-badge-dot" id="profileBadgeDot" style="display: none;">🔥</span>
-          </button>
         </div>
       </header>
 
@@ -151,47 +142,13 @@
           <button class="ghost-button" id="closeProfileButton" type="button" aria-label="Закрыть профиль">×</button>
         </header>
 
-        <div class="profile-streak-box" id="streakButton">
-          <div class="profile-streak-info">
-            <span class="profile-streak-icon">🔥</span>
-            <div>
-              <p class="profile-streak-title">Серия заходов: <span id="streakCountText">0🔥</span></p>
-              <p class="profile-streak-sub">Заходите каждый день и получайте награды</p>
-            </div>
-          </div>
-          <span class="streak-badge-claim" id="streakBadgeClaim" style="display: none;">Забрать</span>
-        </div>
-
         <div class="collection-meter">
           <div>
-            <span id="collectionCount">0/18</span>
+            <span id="collectionCount">0/24</span>
             <small>открыто</small>
           </div>
           <div class="meter-track" aria-hidden="true">
             <span id="collectionProgress"></span>
-          </div>
-        </div>
-
-        <div class="collector-certificate-card" id="collectorCertificate" hidden>
-          <div class="certificate-seal">🏆</div>
-          <div class="certificate-header">
-            <p class="certificate-eyebrow">Официальный Сертификат</p>
-            <h3 class="certificate-title">Великий Магистр CHARADES</h3>
-          </div>
-          <div class="certificate-user-box">
-            <div class="certificate-avatar" id="certificateAvatar">🔮</div>
-            <div class="certificate-user-info">
-              <span class="certificate-user-name" id="certificateUserName">Игрок</span>
-              <span class="certificate-user-status" id="certificateStatusText">100% карт разблокировано</span>
-            </div>
-          </div>
-          <div class="certificate-actions-box" style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
-            <button class="upgrade-vip-button collector-sticker-btn" id="claimStickerPackBtn1" type="button">
-              🎁 Забрать персональный стикерпак (1-й сбор)
-            </button>
-            <button class="upgrade-vip-button collector-sticker-btn" id="claimStickerPackBtn2" type="button" style="display: none;">
-              🎁 Забрать стикерпак Charades5 (2-й сбор)
-            </button>
           </div>
         </div>
 
@@ -359,6 +316,101 @@
       </div>
     </section>
 
+    <section class="profile-modal" id="rewardsPanel" role="dialog" aria-modal="true" aria-labelledby="rewardsTitle" hidden>
+      <div class="profile-card">
+        <header class="profile-head">
+          <div>
+            <p class="eyebrow">Награды</p>
+            <h2 id="rewardsTitle">Сбор всех карт</h2>
+          </div>
+          <button class="ghost-button" id="closeRewardsButton" type="button" aria-label="Закрыть награды">×</button>
+        </header>
+
+        <div class="rewards-overview-card">
+          <p class="rewards-overview-text">Собирайте карты в свою коллекцию и получайте эксклюзивные награды и персональные стикеры!</p>
+        </div>
+
+        <div class="collector-certificate-card" id="rewardsCertificateCard">
+          <div class="certificate-seal">🏆</div>
+          <div class="certificate-header">
+            <p class="certificate-eyebrow">Официальный Сертификат</p>
+            <h3 class="certificate-title">Великий Магистр CHARADES</h3>
+          </div>
+          <div class="certificate-user-box">
+            <div class="certificate-avatar" id="rewardsAvatar">🔮</div>
+            <div class="certificate-user-info">
+              <span class="certificate-user-name" id="rewardsUserName">Игрок</span>
+              <span class="certificate-user-status" id="rewardsStatusText">100% карт разблокировано</span>
+            </div>
+          </div>
+          <div class="certificate-actions-box" style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <button class="upgrade-vip-button collector-sticker-btn" id="rewardsStickerBtn1" type="button">
+              🎁 Забрать персональный стикерпак (1-й сбор)
+            </button>
+            <button class="upgrade-vip-button collector-sticker-btn" id="rewardsStickerBtn2" type="button" style="display: none;">
+              🎁 Забрать стикерпак Charades5 (2-й сбор)
+            </button>
+          </div>
+        </div>
+
+        <div class="rewards-info-box">
+          <div class="reward-tier-card">
+            <div class="reward-tier-badge">1-й сбор (100%)</div>
+            <div class="reward-tier-content">
+              <strong>🏆 Именной Стикерпак в Telegram</strong>
+              <p>Бот сгенерирует для вас персональный золотой стикер с вашей аватаркой, именем и титулом «Великий Магистр».</p>
+            </div>
+          </div>
+          <div class="reward-tier-card" style="margin-top: 10px;">
+            <div class="reward-tier-badge" style="background: rgba(192, 132, 252, 0.2); color: #c084fc; border-color: rgba(192, 132, 252, 0.4);">2-й сбор (200%)</div>
+            <div class="reward-tier-content">
+              <strong>🎁 Премиум-стикерпак Charades5</strong>
+              <p>Доступ к официальному полному стикерпаку CHARADES со всеми героями и картами.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav" id="bottomNav" aria-label="Основная навигация">
+      <button class="nav-item" id="tabStreak" type="button" aria-label="Огонёк (Серия)">
+        <div class="nav-icon-wrap">
+          <span class="nav-icon">🔥</span>
+          <span class="nav-badge" id="navStreakBadge" style="display: none;"></span>
+        </div>
+        <span class="nav-label">Огонёк</span>
+      </button>
+
+      <button class="nav-item" id="tabQuests" type="button" aria-label="Квесты">
+        <div class="nav-icon-wrap">
+          <span class="nav-icon">🎁</span>
+        </div>
+        <span class="nav-label">Квесты</span>
+      </button>
+
+      <button class="nav-item is-active is-main" id="tabMain" type="button" aria-label="Главный экран">
+        <div class="nav-icon-wrap main-icon-wrap">
+          <span class="nav-icon">🔮</span>
+        </div>
+        <span class="nav-label">Главная</span>
+      </button>
+
+      <button class="nav-item" id="tabRewards" type="button" aria-label="Награды">
+        <div class="nav-icon-wrap">
+          <span class="nav-icon">🏆</span>
+        </div>
+        <span class="nav-label">Награды</span>
+      </button>
+
+      <button class="nav-item" id="tabProfile" type="button" aria-label="Профиль">
+        <div class="nav-icon-wrap">
+          <span class="nav-icon">👤</span>
+        </div>
+        <span class="nav-label">Профиль</span>
+      </button>
+    </nav>
+
     <template id="countCardTemplate">
       <span class="count-card">
         <img src="/media/карта.jpg" alt="" />
@@ -382,6 +434,6 @@
       </article>
     </template>
 
-    <script src="/app.js?v=53"></script>
+    <script src="/app.js?v=54"></script>
   </body>
 </html>
