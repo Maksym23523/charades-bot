@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#161419" />
     <title>CHARADES</title>
-    <link rel="stylesheet" href="/styles.css?v=57" />
+    <link rel="stylesheet" href="/styles.css?v=58" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
   <body>
@@ -404,21 +404,22 @@
     </section>
 
     <section class="profile-modal" id="rewardsPanel" role="dialog" aria-modal="true" aria-labelledby="rewardsTitle" hidden>
-      <div class="profile-card">
+      <div class="profile-card rewards-modal-card">
         <header class="profile-head">
           <div>
-            <p class="eyebrow">Награды</p>
-            <h2 id="rewardsTitle">Сбор всех карт</h2>
+            <p class="eyebrow">Достижения</p>
+            <h2 id="rewardsTitle">🏆 Награды</h2>
           </div>
           <button class="ghost-button" id="closeRewardsButton" type="button" aria-label="Закрыть награды">×</button>
         </header>
 
-        <div class="rewards-overview-card">
-          <p class="rewards-overview-text">Собирайте карты в свою коллекцию и получайте эксклюзивные награды и персональные стикеры!</p>
-        </div>
-
+        <!-- Golden Master Certificate Card -->
         <div class="collector-certificate-card" id="rewardsCertificateCard">
-          <div class="certificate-seal">🏆</div>
+          <div class="certificate-shimmer"></div>
+          <div class="certificate-seal-wrap">
+            <span class="certificate-seal">🏆</span>
+            <span class="certificate-seal-aura"></span>
+          </div>
           <div class="certificate-header">
             <p class="certificate-eyebrow">Официальный Сертификат</p>
             <h3 class="certificate-title">Великий Магистр CHARADES</h3>
@@ -430,87 +431,24 @@
               <span class="certificate-user-status" id="rewardsStatusText">100% карт разблокировано</span>
             </div>
           </div>
-          <div class="certificate-actions-box" style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="certificate-actions-box" id="rewardsActionsBox">
             <button class="upgrade-vip-button collector-sticker-btn" id="rewardsStickerBtn1" type="button">
-              🎁 Забрать персональный стикерпак (1-й сбор)
+              <span>🎁 Забрать именной стикерпак (1-й сбор)</span>
             </button>
-            <button class="upgrade-vip-button collector-sticker-btn" id="rewardsStickerBtn2" type="button" style="display: none;">
-              🎁 Забрать стикерпак Charades5 (2-й сбор)
+            <button class="upgrade-vip-button collector-sticker-btn btn-secondary-reward" id="rewardsStickerBtn2" type="button" style="display: none;">
+              <span>🎁 Забрать стикерпак Charades5 (2-й сбор)</span>
             </button>
           </div>
         </div>
 
-        <div class="rewards-info-box">
-          <div class="reward-tier-card">
-            <div class="reward-tier-badge">1-й сбор (100%)</div>
-            <div class="reward-tier-content">
-              <strong>🏆 Именной Стикерпак в Telegram</strong>
-              <p>Персональный золотой стикер с вашей аватаркой, именем и титулом «Великий Магистр».</p>
-            </div>
-          </div>
-          <div class="reward-tier-card" style="margin-top: 10px;">
-            <div class="reward-tier-badge" style="background: rgba(192, 132, 252, 0.2); color: #c084fc; border-color: rgba(192, 132, 252, 0.4);">2-й сбор (200%)</div>
-            <div class="reward-tier-content">
-              <strong>🎁 Премиум-стикерпак Charades5</strong>
-              <p>Доступ к официальному полному стикерпаку CHARADES в Telegram.</p>
-            </div>
-          </div>
-          <div class="reward-tier-card" style="margin-top: 10px;">
-            <div class="reward-tier-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">3-й сбор</div>
-            <div class="reward-tier-content">
-              <strong>🔴 Скин рубашки «Красный»</strong>
-              <p>Эксклюзивный красный дизайн для колоды и анимаций.</p>
-            </div>
-          </div>
-          <div class="reward-tier-card" style="margin-top: 10px;">
-            <div class="reward-tier-badge" style="background: rgba(34, 197, 94, 0.2); color: #22c55e; border-color: rgba(34, 197, 94, 0.4);">4-й сбор</div>
-            <div class="reward-tier-content">
-              <strong>🟢 Скин рубашки «Зеленый»</strong>
-              <p>Стильный зеленый скин для рубашки карт.</p>
-            </div>
-          </div>
-          <div class="reward-tier-card" style="margin-top: 10px;">
-            <div class="reward-tier-badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308; border-color: rgba(234, 179, 8, 0.4);">5-й сбор</div>
-            <div class="reward-tier-content">
-              <strong>🟡 Скин рубашки «Желтый»</strong>
-              <p>Яркий солнечный скин для колоды карт.</p>
-            </div>
-          </div>
-          <div class="reward-tier-card" style="margin-top: 10px;">
-            <div class="reward-tier-badge" style="background: rgba(148, 163, 184, 0.2); color: #94a3b8; border-color: rgba(148, 163, 184, 0.4);">6-й сбор</div>
-            <div class="reward-tier-content">
-              <strong>⚪️ Скин рубашки «Серый»</strong>
-              <p>Элегантный серый скин карт.</p>
-            </div>
-          </div>
-          <div class="reward-tier-card" style="margin-top: 10px;">
-            <div class="reward-tier-badge" style="background: rgba(71, 85, 105, 0.3); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.4);">7-й сбор</div>
-            <div class="reward-tier-content">
-              <strong>⚫️ Скин рубашки «Черный»</strong>
-              <p>Тёмный мистический скин для карт.</p>
-            </div>
-          </div>
-          <div class="reward-tier-card" style="margin-top: 10px;">
-            <div class="reward-tier-badge" style="background: rgba(226, 232, 240, 0.2); color: #f1f5f9; border-color: rgba(226, 232, 240, 0.4);">8-й сбор</div>
-            <div class="reward-tier-content">
-              <strong>🔘 Скин рубашки «Серебристый»</strong>
-              <p>Благородный серебряный металлик.</p>
-            </div>
-          </div>
-          <div class="reward-tier-card" style="margin-top: 10px;">
-            <div class="reward-tier-badge" style="background: rgba(214, 169, 79, 0.2); color: #ffd700; border-color: rgba(214, 169, 79, 0.4);">9-й сбор</div>
-            <div class="reward-tier-content">
-              <strong>👑 Скин рубашки «Золотой»</strong>
-              <p>Роскошный золотой скин для истинных мастеров.</p>
-            </div>
-          </div>
-          <div class="reward-tier-card" style="margin-top: 10px;">
-            <div class="reward-tier-badge" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(192, 132, 252, 0.3)); color: #fff; border-color: #ffd700;">10-й сбор</div>
-            <div class="reward-tier-content">
-              <strong>✨ Скин рубашки «Золото про»</strong>
-              <p>Максимальный премиальный статус и скин за 10 завершенных сборов!</p>
-            </div>
-          </div>
+        <!-- Section Title for 10 Tiers -->
+        <div class="rewards-section-title">
+          <span>🌟 Путь Магистра: 10 уровней сбора</span>
+        </div>
+
+        <!-- Dynamic Tiers List Container -->
+        <div class="rewards-info-box" id="rewardsTiersList">
+          <!-- Dynamically populated by renderRewards() in app.js -->
         </div>
       </div>
     </section>
@@ -577,6 +515,6 @@
       </article>
     </template>
 
-    <script src="/app.js?v=57"></script>
+    <script src="/app.js?v=58"></script>
   </body>
 </html>

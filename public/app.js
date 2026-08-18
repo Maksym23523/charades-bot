@@ -1549,6 +1549,107 @@ function closeRewards() {
   setActiveTab("tabMain");
 }
 
+const REWARD_TIERS = [
+  {
+    round: 1,
+    title: "Именной Стикерпак",
+    desc: "Персональный золотой стикер с вашей аватаркой, именем и титулом «Великий Магистр».",
+    icon: "🏆",
+    badgeText: "1-й сбор (100%)",
+    badgeColor: "#ffd700",
+    type: "sticker1"
+  },
+  {
+    round: 2,
+    title: "Премиум-стикерпак Charades5",
+    desc: "Доступ к официальному полному стикерпаку CHARADES в Telegram.",
+    icon: "🎁",
+    badgeText: "2-й сбор (200%)",
+    badgeColor: "#c084fc",
+    type: "sticker2"
+  },
+  {
+    round: 3,
+    title: "Скин «Красный»",
+    desc: "Эксклюзивный огненно-красный дизайн рубашки для колоды и анимаций.",
+    icon: "🔴",
+    skinId: "skin_2",
+    badgeText: "3-й сбор",
+    badgeColor: "#ef4444",
+    type: "skin"
+  },
+  {
+    round: 4,
+    title: "Скин «Зеленый»",
+    desc: "Стильный изумрудный скин для рубашки карт.",
+    icon: "🟢",
+    skinId: "skin_3",
+    badgeText: "4-й сбор",
+    badgeColor: "#22c55e",
+    type: "skin"
+  },
+  {
+    round: 5,
+    title: "Скин «Желтый»",
+    desc: "Яркий солнечный скин для колоды карт.",
+    icon: "🟡",
+    skinId: "skin_4",
+    badgeText: "5-й сбор",
+    badgeColor: "#eab308",
+    type: "skin"
+  },
+  {
+    round: 6,
+    title: "Скин «Серый»",
+    desc: "Элегантный серый металлический скин карт.",
+    icon: "⚪️",
+    skinId: "skin_5",
+    badgeText: "6-й сбор",
+    badgeColor: "#94a3b8",
+    type: "skin"
+  },
+  {
+    round: 7,
+    title: "Скин «Черный»",
+    desc: "Тёмный мистический скин для карт.",
+    icon: "⚫️",
+    skinId: "skin_6",
+    badgeText: "7-й сбор",
+    badgeColor: "#cbd5e1",
+    type: "skin"
+  },
+  {
+    round: 8,
+    title: "Скин «Серебристый»",
+    desc: "Благородный серебряный металлик.",
+    icon: "🔘",
+    skinId: "skin_7",
+    badgeText: "8-й сбор",
+    badgeColor: "#f1f5f9",
+    type: "skin"
+  },
+  {
+    round: 9,
+    title: "Скин «Золотой»",
+    desc: "Роскошный золотой скин для истинных мастеров.",
+    icon: "👑",
+    skinId: "skin_8",
+    badgeText: "9-й сбор",
+    badgeColor: "#ffd700",
+    type: "skin"
+  },
+  {
+    round: 10,
+    title: "Скин «Золото про»",
+    desc: "Максимальный премиальный статус и скин за 10 завершенных сборов!",
+    icon: "✨",
+    skinId: "skin_9",
+    badgeText: "10-й сбор",
+    badgeColor: "#ffd700",
+    type: "skin"
+  }
+];
+
 function renderRewards() {
   if (!rewardsCertificateCard) return;
   updateUserCertificateDetails(rewardsUserName, rewardsAvatar);
@@ -1557,6 +1658,7 @@ function renderRewards() {
   const total = stats.total;
   const round1Count = stats.roundCounts[0] ? stats.roundCounts[0].count : 0;
   const round2Count = stats.roundCounts[1] ? stats.roundCounts[1].count : 0;
+  const selectedSkin = getSelectedSkin();
 
   if (round1Count < total) {
     if (rewardsStatusText) {
@@ -1577,7 +1679,7 @@ function renderRewards() {
     }
     if (rewardsStickerBtn1) {
       rewardsStickerBtn1.disabled = false;
-      rewardsStickerBtn1.textContent = "🎁 Забрать персональный стикерпак (1-й сбор)";
+      rewardsStickerBtn1.textContent = "🎁 Забрать именной стикерпак (1-й сбор)";
       rewardsStickerBtn1.style.opacity = "1";
       rewardsStickerBtn1.style.cursor = "pointer";
     }
@@ -1590,11 +1692,15 @@ function renderRewards() {
     }
   } else {
     if (rewardsStatusText) {
-      rewardsStatusText.textContent = `Завершено сборов: ${stats.completedRounds}/${stats.MAX_ROUNDS}`;
+      if (stats.completedRounds >= stats.MAX_ROUNDS) {
+        rewardsStatusText.textContent = "Все 10 сборов завершены! 👑";
+      } else {
+        rewardsStatusText.textContent = `Завершено сборов: ${stats.completedRounds}/${stats.MAX_ROUNDS}`;
+      }
     }
     if (rewardsStickerBtn1) {
       rewardsStickerBtn1.disabled = false;
-      rewardsStickerBtn1.textContent = "🎁 Забрать персональный стикерпак (1-й сбор)";
+      rewardsStickerBtn1.textContent = "🎁 Забрать именной стикерпак (1-й сбор)";
       rewardsStickerBtn1.style.opacity = "1";
       rewardsStickerBtn1.style.cursor = "pointer";
     }
@@ -1606,6 +1712,151 @@ function renderRewards() {
       rewardsStickerBtn2.style.cursor = "pointer";
     }
   }
+
+  // Render 10 dynamic roadmap tiers
+  const tiersListContainer = document.querySelector("#rewardsTiersList");
+  if (!tiersListContainer) return;
+  tiersListContainer.innerHTML = "";
+
+  REWARD_TIERS.forEach((tier, index) => {
+    const isUnlocked = stats.completedRounds >= tier.round;
+    const isCurrent = !isUnlocked && (tier.round === stats.currentRound);
+    const roundCount = stats.roundCounts[tier.round - 1] ? stats.roundCounts[tier.round - 1].count : 0;
+    const roundProgress = total > 0 ? Math.round((roundCount / total) * 100) : 0;
+
+    const card = document.createElement("div");
+    card.className = "reward-tier-card";
+    card.style.animationDelay = `${index * 0.04}s`;
+
+    if (isUnlocked) card.classList.add("is-unlocked");
+    else if (isCurrent) card.classList.add("is-current");
+    else card.classList.add("is-locked");
+
+    const mainWrap = document.createElement("div");
+    mainWrap.className = "reward-tier-main";
+
+    const iconEl = document.createElement("div");
+    iconEl.className = "reward-tier-icon";
+    iconEl.textContent = tier.icon;
+    mainWrap.appendChild(iconEl);
+
+    const contentEl = document.createElement("div");
+    contentEl.className = "reward-tier-content";
+
+    const headerEl = document.createElement("div");
+    headerEl.className = "reward-tier-header";
+
+    const badge = document.createElement("span");
+    badge.className = "reward-tier-badge";
+    badge.style.color = tier.badgeColor;
+    badge.style.borderColor = tier.badgeColor;
+    badge.style.backgroundColor = `rgba(255,255,255,0.06)`;
+    badge.textContent = tier.badgeText;
+    headerEl.appendChild(badge);
+
+    const titleEl = document.createElement("h4");
+    titleEl.className = "reward-tier-name";
+    titleEl.textContent = tier.title;
+    headerEl.appendChild(titleEl);
+
+    contentEl.appendChild(headerEl);
+
+    const descEl = document.createElement("p");
+    descEl.className = "reward-tier-desc";
+    descEl.textContent = tier.desc;
+    contentEl.appendChild(descEl);
+
+    if (isCurrent) {
+      const progressWrap = document.createElement("div");
+      progressWrap.className = "reward-tier-progress-wrap";
+      
+      const progressText = document.createElement("span");
+      progressText.className = "reward-tier-progress-text";
+      progressText.textContent = `🎯 Прогресс: ${roundCount}/${total} карт (${roundProgress}%)`;
+      progressWrap.appendChild(progressText);
+
+      const bar = document.createElement("div");
+      bar.className = "reward-tier-progress-bar";
+      const fill = document.createElement("div");
+      fill.className = "reward-tier-progress-fill";
+      fill.style.width = `${roundProgress}%`;
+      bar.appendChild(fill);
+      progressWrap.appendChild(bar);
+
+      contentEl.appendChild(progressWrap);
+    }
+
+    mainWrap.appendChild(contentEl);
+    card.appendChild(mainWrap);
+
+    const actionWrap = document.createElement("div");
+    actionWrap.className = "reward-tier-action";
+
+    if (isUnlocked) {
+      if (tier.type === "skin") {
+        const isCurrentSkin = selectedSkin.id === tier.skinId;
+        const btn = document.createElement("button");
+        btn.className = "reward-tier-btn";
+        if (isCurrentSkin) {
+          btn.classList.add("is-active-skin");
+          btn.textContent = "✓ Надето";
+        } else {
+          btn.textContent = "Надеть";
+        }
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          applyCardSkin(tier.skinId);
+          renderRewards();
+          if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+        });
+        actionWrap.appendChild(btn);
+      } else if (tier.type === "sticker1") {
+        const btn = document.createElement("button");
+        btn.className = "reward-tier-btn";
+        btn.textContent = "Забрать";
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openStickerPack(1);
+        });
+        actionWrap.appendChild(btn);
+      } else if (tier.type === "sticker2") {
+        const btn = document.createElement("button");
+        btn.className = "reward-tier-btn";
+        btn.textContent = "Забрать";
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openStickerPack(2);
+        });
+        actionWrap.appendChild(btn);
+      } else {
+        const pill = document.createElement("span");
+        pill.className = "reward-tier-status-pill unlocked";
+        pill.textContent = "✓ Открыто";
+        actionWrap.appendChild(pill);
+      }
+    } else {
+      const pill = document.createElement("span");
+      pill.className = "reward-tier-status-pill locked";
+      pill.textContent = `🔒 ${tier.round}-й сбор`;
+      actionWrap.appendChild(pill);
+    }
+
+    card.appendChild(actionWrap);
+
+    card.addEventListener("click", () => {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+      if (!isUnlocked) {
+        const msg = `🔒 «${tier.title}» станет доступно после ${tier.round}-го сбора всех ${total || 24} карт! (Сейчас пройдено сборов: ${stats.completedRounds}/${stats.MAX_ROUNDS})`;
+        if (tg && typeof tg.showAlert === "function") {
+          tg.showAlert(msg);
+        } else {
+          alert(msg);
+        }
+      }
+    });
+
+    tiersListContainer.appendChild(card);
+  });
 }
 
 function renderProfile() {

@@ -1753,46 +1753,99 @@ textarea:focus {
   display: block;
 }
 
+/* ==========================================================================
+   Rewards UI Styles & Animations
+   ========================================================================== */
+
+@keyframes certificateShine {
+  0% {
+    transform: translateX(-150%) skewX(-25deg);
+  }
+  25%, 100% {
+    transform: translateX(200%) skewX(-25deg);
+  }
+}
+
+@keyframes sealRadiance {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4));
+  }
+  50% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.8));
+  }
+}
+
+@keyframes tierEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Collector Certificate & Sticker Pack Reward */
 .collector-certificate-card {
   position: relative;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(184, 134, 11, 0.06));
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  border-radius: 16px;
-  padding: 18px;
+  background: linear-gradient(135deg, rgba(43, 36, 48, 0.95), rgba(30, 24, 34, 0.95));
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  border-radius: 18px;
+  padding: 20px 18px;
   margin-bottom: 20px;
-  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 20px rgba(214, 169, 79, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   text-align: center;
   overflow: hidden;
 }
 
 .collector-certificate-card.in-modal {
   margin-bottom: 0;
-  border-color: rgba(255, 215, 0, 0.5);
-  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(255, 215, 0, 0.3);
+}
+
+.certificate-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.12), transparent);
+  pointer-events: none;
+  animation: certificateShine 4s infinite ease-in-out;
+}
+
+.certificate-seal-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 6px;
 }
 
 .certificate-seal {
-  font-size: 32px;
-  margin-bottom: 4px;
-  filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.4));
+  font-size: 38px;
+  display: inline-block;
+  animation: sealRadiance 3s infinite ease-in-out;
 }
 
 .certificate-eyebrow {
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   color: #ffd700;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
 }
 
 .certificate-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #fff;
-  text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 0 14px rgba(255, 215, 0, 0.6);
   margin: 4px 0 14px;
+  letter-spacing: -0.01em;
 }
 
 .certificate-user-box {
@@ -1800,25 +1853,27 @@ textarea:focus {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 215, 0, 0.25);
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-radius: 12px;
   margin-bottom: 14px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .certificate-avatar {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: rgba(255, 215, 0, 0.2);
+  background: rgba(255, 215, 0, 0.15);
   border: 2px solid #ffd700;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 22px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.35);
+  flex-shrink: 0;
 }
 
 .certificate-avatar img {
@@ -1834,36 +1889,53 @@ textarea:focus {
 .certificate-user-name {
   font-weight: 800;
   font-size: 15px;
-  color: #ffd700;
+  color: #ffffff;
   display: block;
 }
 
 .certificate-user-status {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffd700;
   display: block;
+  font-weight: 700;
 }
 
-.certificate-desc {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.4;
-  margin-bottom: 14px;
+.certificate-actions-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .collector-sticker-btn {
-  background: linear-gradient(135deg, #ffd700, #a855f7);
-  color: #fff;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffd700, #b86779);
+  color: #121014 !important;
   border: none;
   font-weight: 800;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.35);
+  font-size: 13px !important;
+  padding: 12px 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(214, 169, 79, 0.35);
   transition: all 0.25s ease;
 }
 
-.collector-sticker-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 22px rgba(168, 85, 247, 0.5);
+.collector-sticker-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  animation: buttonShimmer 3.5s infinite;
+}
+
+.collector-sticker-btn.btn-secondary-reward {
+  background: linear-gradient(135deg, #c084fc, #9333ea);
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(192, 132, 252, 0.35);
 }
 
 .collector-celebration-card {
@@ -2186,61 +2258,189 @@ textarea:focus {
   animation: pulseBadge 1.8s infinite ease-in-out;
 }
 
-/* Rewards Panel Custom Styles */
-.rewards-overview-card {
-  background: linear-gradient(135deg, rgba(214, 169, 79, 0.12), rgba(90, 168, 147, 0.08));
-  border: 1px solid rgba(214, 169, 79, 0.25);
-  border-radius: 12px;
-  padding: 12px 14px;
-  margin-bottom: 16px;
-}
-
-.rewards-overview-text {
-  margin: 0;
-  font-size: 13px;
+.rewards-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
   color: var(--text);
-  line-height: 1.4;
-  text-align: center;
+  margin-top: 6px;
+  margin-bottom: 12px;
+  padding-left: 2px;
 }
 
 .rewards-info-box {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 16px;
 }
 
 .reward-tier-card {
-  background: rgba(255, 255, 255, 0.03);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(43, 36, 48, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.25s ease;
+  animation: tierEntrance 0.35s ease backwards;
+}
+
+.reward-tier-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.reward-tier-card.is-unlocked {
+  border-color: rgba(90, 168, 147, 0.45);
+  background: linear-gradient(135deg, rgba(43, 36, 48, 0.7), rgba(28, 40, 36, 0.5));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 0 12px rgba(90, 168, 147, 0.15);
+}
+
+.reward-tier-card.is-current {
+  border-color: rgba(255, 215, 0, 0.6);
+  background: linear-gradient(135deg, rgba(43, 36, 48, 0.8), rgba(46, 38, 26, 0.6));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 16px rgba(255, 215, 0, 0.25);
+}
+
+.reward-tier-card.is-locked {
+  opacity: 0.75;
+}
+
+.reward-tier-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.reward-tier-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.reward-tier-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.reward-tier-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .reward-tier-badge {
   display: inline-block;
   padding: 2px 8px;
-  background: rgba(255, 215, 0, 0.15);
-  color: #ffd700;
-  border: 1px solid rgba(255, 215, 0, 0.35);
   border-radius: 99px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  margin-bottom: 6px;
+  border: 1px solid currentColor;
 }
 
-.reward-tier-content strong {
-  display: block;
+.reward-tier-name {
   font-size: 14px;
+  font-weight: 800;
   color: #ffffff;
-  margin-bottom: 4px;
+  margin: 0;
 }
 
-.reward-tier-content p {
+.reward-tier-desc {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
   line-height: 1.35;
+}
+
+.reward-tier-progress-wrap {
+  margin-top: 4px;
+}
+
+.reward-tier-progress-bar {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.reward-tier-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700, #ff8c00);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.reward-tier-progress-text {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.reward-tier-action {
+  flex-shrink: 0;
+}
+
+.reward-tier-btn {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(214, 169, 79, 0.35);
+  background: rgba(214, 169, 79, 0.15);
+  color: #ffd700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.reward-tier-btn:hover {
+  background: rgba(214, 169, 79, 0.3);
+  transform: scale(1.04);
+}
+
+.reward-tier-btn.is-active-skin {
+  background: rgba(90, 168, 147, 0.2);
+  color: #5aa893;
+  border-color: rgba(90, 168, 147, 0.4);
+}
+
+.reward-tier-status-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.reward-tier-status-pill.unlocked {
+  color: #5aa893;
+  background: rgba(90, 168, 147, 0.15);
+  border: 1px solid rgba(90, 168, 147, 0.3);
+}
+
+.reward-tier-status-pill.locked {
+  color: #ff6b6b;
+  background: rgba(255, 74, 74, 0.1);
+  border: 1px solid rgba(255, 74, 74, 0.2);
 }
 
 /* Card Skins Section in Profile */
