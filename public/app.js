@@ -128,14 +128,14 @@ const rewardsStickerBtn2 = document.querySelector("#rewardsStickerBtn2");
 
 const CARD_SKINS = [
   { id: "default", name: "Классическая", url: "/media/карта.jpg", requiredRound: 0 },
-  { id: "skin_2", name: "Красный", url: "/media/карта 2.JPEG", requiredRound: 3 },
-  { id: "skin_3", name: "Зеленый", url: "/media/карта 3.JPEG", requiredRound: 4 },
-  { id: "skin_4", name: "Желтый", url: "/media/карта 4.JPEG", requiredRound: 5 },
-  { id: "skin_5", name: "Серый", url: "/media/карта 5.JPEG", requiredRound: 6 },
-  { id: "skin_6", name: "Черный", url: "/media/карта 6.JPEG", requiredRound: 7 },
-  { id: "skin_7", name: "Серебристый", url: "/media/карта 7.PNG", requiredRound: 8 },
-  { id: "skin_8", name: "Золотой", url: "/media/карта 8.PNG", requiredRound: 9 },
-  { id: "skin_9", name: "Золото про", url: "/media/карта 9.PNG", requiredRound: 10 }
+  { id: "skin_2", name: "Красный", url: "/media/карта 2.JPEG", requiredRound: 1 },
+  { id: "skin_3", name: "Зеленый", url: "/media/карта 3.JPEG", requiredRound: 2 },
+  { id: "skin_4", name: "Желтый", url: "/media/карта 4.JPEG", requiredRound: 3 },
+  { id: "skin_5", name: "Серый", url: "/media/карта 5.JPEG", requiredRound: 4 },
+  { id: "skin_6", name: "Черный", url: "/media/карта 6.JPEG", requiredRound: 5 },
+  { id: "skin_7", name: "Серебристый", url: "/media/карта 7.PNG", requiredRound: 6 },
+  { id: "skin_8", name: "Золотой", url: "/media/карта 8.PNG", requiredRound: 7 },
+  { id: "skin_9", name: "Золото про", url: "/media/карта 9.PNG", requiredRound: 8 }
 ];
 
 const cardSkinsSection = document.querySelector("#cardSkinsSection");
@@ -255,21 +255,27 @@ function openCelebrationModal(round = 1) {
   const modalBtn1 = document.querySelector("#modalStickerPackBtn1");
   const modalBtn2 = document.querySelector("#modalStickerPackBtn2");
 
-  if (round === 1) {
+  if (round === 10) {
     if (modalTitle) modalTitle.textContent = "Великий Магистр CHARADES";
-    if (modalStatus) modalStatus.textContent = "1-й сбор коллекции завершен (100%)";
-    if (modalBtn1) modalBtn1.style.display = "block";
+    if (modalStatus) modalStatus.textContent = "Все 10 сборов завершены (1000%)!";
+    if (modalBtn1) {
+      modalBtn1.style.display = "block";
+      modalBtn1.textContent = "🏆 Забрать именной стикерпак (10-й сбор)";
+    }
     if (modalBtn2) modalBtn2.style.display = "none";
-  } else if (round === 2) {
-    if (modalTitle) modalTitle.textContent = "Великий Магистр (2-й сбор)";
-    if (modalStatus) modalStatus.textContent = "2-й сбор коллекции завершен (100%)";
-    if (modalBtn1) modalBtn1.style.display = "block";
-    if (modalBtn2) modalBtn2.style.display = "block";
+  } else if (round === 9) {
+    if (modalTitle) modalTitle.textContent = "Премиум-стикерпак Charades5!";
+    if (modalStatus) modalStatus.textContent = "9-й сбор коллекции завершен (900%)";
+    if (modalBtn1) modalBtn1.style.display = "none";
+    if (modalBtn2) {
+      modalBtn2.style.display = "block";
+      modalBtn2.textContent = "🎁 Забрать стикерпак Charades5 (9-й сбор)";
+    }
   } else {
     const skin = CARD_SKINS.find((s) => s.requiredRound === round);
     const skinName = skin ? skin.name : `Скин ${round}`;
     if (modalTitle) modalTitle.textContent = `Разблокирован скин «${skinName}»!`;
-    if (modalStatus) modalStatus.textContent = `${round}-й сбор коллекции завершен (100%)`;
+    if (modalStatus) modalStatus.textContent = `${round}-й сбор коллекции завершен (${round * 100}%)`;
     if (modalBtn1) modalBtn1.style.display = "none";
     if (modalBtn2) modalBtn2.style.display = "none";
   }
@@ -1552,101 +1558,101 @@ function closeRewards() {
 const REWARD_TIERS = [
   {
     round: 1,
-    title: "Именной Стикерпак",
-    desc: "Персональный золотой стикер с вашей аватаркой, именем и титулом «Великий Магистр».",
-    icon: "🏆",
-    badgeText: "1-й сбор (100%)",
-    badgeColor: "#ffd700",
-    type: "sticker1"
-  },
-  {
-    round: 2,
-    title: "Премиум-стикерпак Charades5",
-    desc: "Доступ к официальному полному стикерпаку CHARADES в Telegram.",
-    icon: "🎁",
-    badgeText: "2-й сбор (200%)",
-    badgeColor: "#c084fc",
-    type: "sticker2"
-  },
-  {
-    round: 3,
     title: "Скин «Красный»",
     desc: "Эксклюзивный огненно-красный дизайн рубашки для колоды и анимаций.",
     icon: "🔴",
     skinId: "skin_2",
-    badgeText: "3-й сбор",
+    badgeText: "1-й сбор (100%)",
     badgeColor: "#ef4444",
     type: "skin"
   },
   {
-    round: 4,
+    round: 2,
     title: "Скин «Зеленый»",
     desc: "Стильный изумрудный скин для рубашки карт.",
     icon: "🟢",
     skinId: "skin_3",
-    badgeText: "4-й сбор",
+    badgeText: "2-й сбор (200%)",
     badgeColor: "#22c55e",
     type: "skin"
   },
   {
-    round: 5,
+    round: 3,
     title: "Скин «Желтый»",
     desc: "Яркий солнечный скин для колоды карт.",
     icon: "🟡",
     skinId: "skin_4",
-    badgeText: "5-й сбор",
+    badgeText: "3-й сбор (300%)",
     badgeColor: "#eab308",
     type: "skin"
   },
   {
-    round: 6,
+    round: 4,
     title: "Скин «Серый»",
     desc: "Элегантный серый металлический скин карт.",
     icon: "⚪️",
     skinId: "skin_5",
-    badgeText: "6-й сбор",
+    badgeText: "4-й сбор (400%)",
     badgeColor: "#94a3b8",
     type: "skin"
   },
   {
-    round: 7,
+    round: 5,
     title: "Скин «Черный»",
     desc: "Тёмный мистический скин для карт.",
     icon: "⚫️",
     skinId: "skin_6",
-    badgeText: "7-й сбор",
+    badgeText: "5-й сбор (500%)",
     badgeColor: "#cbd5e1",
     type: "skin"
   },
   {
-    round: 8,
+    round: 6,
     title: "Скин «Серебристый»",
     desc: "Благородный серебряный металлик.",
     icon: "🔘",
     skinId: "skin_7",
-    badgeText: "8-й сбор",
+    badgeText: "6-й сбор (600%)",
     badgeColor: "#f1f5f9",
     type: "skin"
   },
   {
-    round: 9,
+    round: 7,
     title: "Скин «Золотой»",
     desc: "Роскошный золотой скин для истинных мастеров.",
     icon: "👑",
     skinId: "skin_8",
-    badgeText: "9-й сбор",
+    badgeText: "7-й сбор (700%)",
     badgeColor: "#ffd700",
     type: "skin"
   },
   {
-    round: 10,
+    round: 8,
     title: "Скин «Золото про»",
-    desc: "Максимальный премиальный статус и скин за 10 завершенных сборов!",
+    desc: "Премиальный королевский скин за 8 сборов!",
     icon: "✨",
     skinId: "skin_9",
-    badgeText: "10-й сбор",
+    badgeText: "8-й сбор (800%)",
     badgeColor: "#ffd700",
     type: "skin"
+  },
+  {
+    round: 9,
+    title: "Премиум-стикерпак Charades5",
+    desc: "Доступ к официальному полному стикерпаку CHARADES в Telegram.",
+    icon: "🎁",
+    badgeText: "9-й сбор (900%)",
+    badgeColor: "#c084fc",
+    type: "sticker2"
+  },
+  {
+    round: 10,
+    title: "Именной Стикерпак в Telegram",
+    desc: "Персональный золотой стикер с вашей аватаркой, именем и титулом «Великий Магистр».",
+    icon: "🏆",
+    badgeText: "10-й сбор (1000%)",
+    badgeColor: "#ffd700",
+    type: "sticker1"
   }
 ];
 
@@ -1656,60 +1662,49 @@ function renderRewards() {
 
   const stats = getCollectionRoundStats();
   const total = stats.total;
-  const round1Count = stats.roundCounts[0] ? stats.roundCounts[0].count : 0;
-  const round2Count = stats.roundCounts[1] ? stats.roundCounts[1].count : 0;
+  const round9Completed = stats.completedRounds >= 9;
+  const round10Completed = stats.completedRounds >= 10;
   const selectedSkin = getSelectedSkin();
 
-  if (round1Count < total) {
+  if (stats.completedRounds >= stats.MAX_ROUNDS) {
     if (rewardsStatusText) {
-      rewardsStatusText.textContent = `Собрано ${round1Count}/${total} карт (1-й сбор)`;
-    }
-    if (rewardsStickerBtn1) {
-      rewardsStickerBtn1.disabled = true;
-      rewardsStickerBtn1.textContent = `🔒 Откройте ещё ${total - round1Count} карт для 1-го сбора`;
-      rewardsStickerBtn1.style.opacity = "0.6";
-      rewardsStickerBtn1.style.cursor = "not-allowed";
-    }
-    if (rewardsStickerBtn2) {
-      rewardsStickerBtn2.style.display = "none";
-    }
-  } else if (round2Count < total) {
-    if (rewardsStatusText) {
-      rewardsStatusText.textContent = "1-й сбор коллекции завершен (100%)";
-    }
-    if (rewardsStickerBtn1) {
-      rewardsStickerBtn1.disabled = false;
-      rewardsStickerBtn1.textContent = "🎁 Забрать именной стикерпак (1-й сбор)";
-      rewardsStickerBtn1.style.opacity = "1";
-      rewardsStickerBtn1.style.cursor = "pointer";
-    }
-    if (rewardsStickerBtn2) {
-      rewardsStickerBtn2.style.display = "block";
-      rewardsStickerBtn2.disabled = true;
-      rewardsStickerBtn2.textContent = `🔒 2-й сбор: ${round2Count}/${total} карт`;
-      rewardsStickerBtn2.style.opacity = "0.6";
-      rewardsStickerBtn2.style.cursor = "not-allowed";
+      rewardsStatusText.textContent = "Великий Магистр (10/10 сборов завершено 👑)";
     }
   } else {
     if (rewardsStatusText) {
-      if (stats.completedRounds >= stats.MAX_ROUNDS) {
-        rewardsStatusText.textContent = "Все 10 сборов завершены! 👑";
-      } else {
-        rewardsStatusText.textContent = `Завершено сборов: ${stats.completedRounds}/${stats.MAX_ROUNDS}`;
-      }
+      rewardsStatusText.textContent = `Пройдено сборов: ${stats.completedRounds}/10 (Текущий: ${stats.currentRoundCount}/${total})`;
     }
-    if (rewardsStickerBtn1) {
-      rewardsStickerBtn1.disabled = false;
-      rewardsStickerBtn1.textContent = "🎁 Забрать именной стикерпак (1-й сбор)";
-      rewardsStickerBtn1.style.opacity = "1";
-      rewardsStickerBtn1.style.cursor = "pointer";
-    }
-    if (rewardsStickerBtn2) {
-      rewardsStickerBtn2.style.display = "block";
+  }
+
+  // Button 2: Charades5 Sticker Pack (Round 9)
+  if (rewardsStickerBtn2) {
+    rewardsStickerBtn2.style.display = "block";
+    if (round9Completed) {
       rewardsStickerBtn2.disabled = false;
-      rewardsStickerBtn2.textContent = "🎁 Забрать стикерпак Charades5 (2-й сбор)";
+      rewardsStickerBtn2.textContent = "🎁 Забрать стикерпак Charades5 (9-й сбор)";
       rewardsStickerBtn2.style.opacity = "1";
       rewardsStickerBtn2.style.cursor = "pointer";
+    } else {
+      rewardsStickerBtn2.disabled = true;
+      rewardsStickerBtn2.textContent = "🔒 Стикерпак Charades5 (9-й сбор)";
+      rewardsStickerBtn2.style.opacity = "0.6";
+      rewardsStickerBtn2.style.cursor = "not-allowed";
+    }
+  }
+
+  // Button 1: Personal Sticker Pack (Round 10)
+  if (rewardsStickerBtn1) {
+    rewardsStickerBtn1.style.display = "block";
+    if (round10Completed) {
+      rewardsStickerBtn1.disabled = false;
+      rewardsStickerBtn1.textContent = "🏆 Забрать именной стикерпак (10-й сбор)";
+      rewardsStickerBtn1.style.opacity = "1";
+      rewardsStickerBtn1.style.cursor = "pointer";
+    } else {
+      rewardsStickerBtn1.disabled = true;
+      rewardsStickerBtn1.textContent = "🔒 Именной стикерпак (10-й сбор)";
+      rewardsStickerBtn1.style.opacity = "0.6";
+      rewardsStickerBtn1.style.cursor = "not-allowed";
     }
   }
 
