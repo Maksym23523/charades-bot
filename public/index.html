@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#161419" />
     <title>CHARADES</title>
-    <link rel="stylesheet" href="/styles.css?v=56" />
+    <link rel="stylesheet" href="/styles.css?v=57" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
   <body>
@@ -179,47 +179,123 @@
     </section>
 
     <section class="profile-modal" id="questsPanel" role="dialog" aria-modal="true" aria-labelledby="questsTitle" hidden>
-      <div class="profile-card">
+      <div class="profile-card quests-modal-card">
         <header class="profile-head">
           <div>
-            <p class="eyebrow">Квесты</p>
-            <h2 id="questsTitle">Задания</h2>
+            <p class="eyebrow">Награды & Бонусы</p>
+            <h2 id="questsTitle">🎁 Квесты</h2>
           </div>
           <button class="ghost-button" id="closeQuestsButton" type="button" aria-label="Закрыть квесты">×</button>
         </header>
 
-        <div class="quests-list" id="questsList">
-          <div class="ref-summary-box">
-            <span>Приглашено друзей: <strong id="refCount">0</strong></span>
+        <!-- Quests Hero Card -->
+        <div class="quests-hero-card">
+          <div class="quests-hero-glow"></div>
+          <div class="quests-hero-sparkles">✨</div>
+          <div class="quests-hero-body">
+            <h3 class="quests-hero-title">Центр Заданий</h3>
+            <p class="quests-hero-sub">Выполняйте задания, приглашайте друзей и получайте бонусные гадания!</p>
+          </div>
+        </div>
+
+        <!-- Referral Hub Card -->
+        <div class="ref-hub-card">
+          <div class="ref-hub-header">
+            <div class="ref-hub-title-wrap">
+              <span class="ref-hub-icon">👥</span>
+              <div>
+                <h4 class="ref-hub-title">Реферальная программа</h4>
+                <p class="ref-hub-subtitle">Приглашайте друзей в CHARADES</p>
+              </div>
+            </div>
+            <span class="ref-hub-badge">⚡️ +20 за друга</span>
           </div>
 
+          <div class="ref-hub-stats-grid">
+            <div class="ref-hub-stat">
+              <span class="ref-hub-stat-label">Приглашено друзей</span>
+              <span class="ref-hub-stat-val" id="refCount">0</span>
+            </div>
+            <div class="ref-hub-stat">
+              <span class="ref-hub-stat-label">Получено гаданий</span>
+              <span class="ref-hub-stat-val ref-gold-val" id="refBonusCount">0</span>
+            </div>
+          </div>
+
+          <div class="ref-hub-actions">
+            <button class="quest-btn invite-btn ref-share-main-btn" id="questReferralBtn" type="button">
+              <span>🔥 Пригласить друзей</span>
+            </button>
+            <button class="quest-btn ref-copy-btn" id="questCopyRefBtn" type="button" title="Скопировать ссылку">
+              <span>📋 Скопировать</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quests List Header -->
+        <div class="quests-section-title">
+          <span>⚡️ Активные квесты</span>
+        </div>
+
+        <div class="quests-list" id="questsList">
           <!-- Quest 1: Telegram Channel -->
-          <div class="quest-item" id="questTelegram">
+          <div class="quest-item quest-card-tg" id="questTelegram">
             <div class="quest-info">
-              <span class="quest-icon">📢</span>
+              <div class="quest-icon-wrapper">
+                <span class="quest-icon">📢</span>
+                <span class="quest-icon-glow"></span>
+              </div>
               <div class="quest-details">
                 <p class="quest-name">Подписка на канал</p>
-                <p class="quest-reward">+5 прокрутов</p>
+                <div class="quest-reward-pill">
+                  <span>⚡️ +5 гаданий</span>
+                </div>
               </div>
             </div>
             <div class="quest-actions">
               <a href="#" target="_blank" class="quest-btn go-btn" id="questTelegramLink">Перейти</a>
-              <button class="quest-btn verify-btn" id="questTelegramVerifyBtn">Проверить</button>
-              <span class="quest-status-done" id="questTelegramDone" style="display: none;">Выполнено ✅</span>
+              <button class="quest-btn verify-btn" id="questTelegramVerifyBtn" type="button">Проверить</button>
+              <span class="quest-status-done" id="questTelegramDone" style="display: none;">
+                <span class="done-icon">✓</span> Выполнено
+              </span>
             </div>
           </div>
 
-          <!-- Quest 2: Referral link -->
-          <div class="quest-item" id="questReferral">
+          <!-- Quest 2: Daily Streak (Огонёк) -->
+          <div class="quest-item quest-card-streak" id="questStreakCard">
             <div class="quest-info">
-              <span class="quest-icon">👥</span>
+              <div class="quest-icon-wrapper">
+                <span class="quest-icon">🔥</span>
+                <span class="quest-icon-glow"></span>
+              </div>
               <div class="quest-details">
-                <p class="quest-name">Пригласи друзей</p>
-                <p class="quest-reward">+20 прокрутов за друга</p>
+                <p class="quest-name">Ежедневный визит</p>
+                <div class="quest-reward-pill streak-pill">
+                  <span>⚡️ До +30 & VIP</span>
+                </div>
               </div>
             </div>
             <div class="quest-actions">
-              <button class="quest-btn invite-btn" id="questReferralBtn">Пригласить</button>
+              <button class="quest-btn streak-quest-btn" id="questOpenStreakBtn" type="button">Открыть</button>
+            </div>
+          </div>
+
+          <!-- Quest 3: Collection (Сбор карт) -->
+          <div class="quest-item quest-card-rewards" id="questRewardsCard">
+            <div class="quest-info">
+              <div class="quest-icon-wrapper">
+                <span class="quest-icon">🎴</span>
+                <span class="quest-icon-glow"></span>
+              </div>
+              <div class="quest-details">
+                <p class="quest-name">Коллекция карт</p>
+                <div class="quest-reward-pill rewards-pill">
+                  <span>🎁 Стикеры & Скины</span>
+                </div>
+              </div>
+            </div>
+            <div class="quest-actions">
+              <button class="quest-btn rewards-quest-btn" id="questOpenRewardsBtn" type="button">Награды</button>
             </div>
           </div>
         </div>
@@ -501,6 +577,6 @@
       </article>
     </template>
 
-    <script src="/app.js?v=56"></script>
+    <script src="/app.js?v=57"></script>
   </body>
 </html>

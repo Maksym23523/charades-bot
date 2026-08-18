@@ -60,7 +60,11 @@ const questTelegramLink = document.querySelector("#questTelegramLink");
 const questTelegramVerifyBtn = document.querySelector("#questTelegramVerifyBtn");
 const questTelegramDone = document.querySelector("#questTelegramDone");
 const refCount = document.querySelector("#refCount");
+const refBonusCount = document.querySelector("#refBonusCount");
 const questReferralBtn = document.querySelector("#questReferralBtn");
+const questCopyRefBtn = document.querySelector("#questCopyRefBtn");
+const questOpenStreakBtn = document.querySelector("#questOpenStreakBtn");
+const questOpenRewardsBtn = document.querySelector("#questOpenRewardsBtn");
 
 const vipBadge = document.querySelector("#vipBadge");
 const limitCounter = document.querySelector("#limitCounter");
@@ -819,6 +823,43 @@ function bindEvents() {
   if (questReferralBtn) {
     questReferralBtn.addEventListener("click", shareReferralLink);
   }
+  if (questCopyRefBtn) {
+    questCopyRefBtn.addEventListener("click", () => {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+      const userId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id;
+      const botName = state.userStatus.botUsername || "charadesgame_bot";
+      const refLink = `https://t.me/${botName}?start=ref_${userId || "test"}`;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(refLink).then(() => {
+          if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+          if (tg && typeof tg.showAlert === "function") {
+            tg.showAlert("✅ Реферальная ссылка скопирована в буфер обмена!");
+          } else {
+            alert("✅ Реферальная ссылка скопирована в буфер обмена!");
+          }
+        }).catch(() => {
+          prompt("Скопируйте ссылку:", refLink);
+        });
+      } else {
+        prompt("Скопируйте ссылку:", refLink);
+      }
+    });
+  }
+  if (questOpenStreakBtn) {
+    questOpenStreakBtn.addEventListener("click", () => {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+      closeQuests();
+      openStreak();
+    });
+  }
+  if (questOpenRewardsBtn) {
+    questOpenRewardsBtn.addEventListener("click", () => {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+      closeQuests();
+      openRewards();
+    });
+  }
 
   if (streakButton) {
     streakButton.addEventListener("click", openStreak);
@@ -1032,6 +1073,9 @@ async function refreshUserStatus() {
       // Update Quests panel values
       if (refCount) {
         refCount.textContent = state.userStatus.invitedFriendsCount;
+      }
+      if (refBonusCount) {
+        refBonusCount.textContent = `+${(state.userStatus.invitedFriendsCount || 0) * 20}`;
       }
       if (questTelegramLink && state.userStatus.telegramChannelUsername) {
         const channelName = state.userStatus.telegramChannelUsername.replace("@", "");
